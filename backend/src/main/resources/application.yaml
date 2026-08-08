@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: ai-resume-analyzer
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER:resume_app}
+    password: ${DB_PASSWORD:resume_app_dev}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  output:
+    ansi:
+      enabled: ALWAYS
+
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+
+app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:5173}
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "${CONSOLE_LOG_PATTERN:%green(%d{HH:mm:ss.SSS}) %blue(%-5level) %red([%thread]) %yellow(%logger{15}) - %cyan(%msg%n)}"
