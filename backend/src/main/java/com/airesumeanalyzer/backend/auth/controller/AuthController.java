@@ -12,12 +12,12 @@ import com.airesumeanalyzer.backend.common.api.ApiResponse;
 import com.airesumeanalyzer.backend.common.api.ApiRoutes;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 @RestController
 @RequestMapping(ApiRoutes.AUTH)
 @RequiredArgsConstructor
@@ -25,31 +25,47 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/login")
+    @PostMapping("/login/public")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
             @Valid @RequestBody LoginRequest request
     ) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        LoginResponse response = authService.login(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(response, "Login successful")
+        );
     }
 
-    @PostMapping("/refresh")
+    @PostMapping("/refresh/public")
     public ResponseEntity<ApiResponse<RefreshTokenResponse>> refresh(
             @Valid @RequestBody RefreshTokenRequest request
     ) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        RefreshTokenResponse response = authService.refresh(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(response, "Token refreshed successfully")
+        );
     }
 
-    @PostMapping("/register")
+    @PostMapping("/register/public")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(
             @Valid @RequestBody RegisterRequest request
     ) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        RegisterResponse response = authService.register(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.success(response, "Registration successful")
+        );
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/logout/public")
     public ResponseEntity<ApiResponse<Void>> logout(
             @Valid @RequestBody LogoutRequest request
     ) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        authService.logout(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(null, "Logout successful")
+        );
     }
 }
