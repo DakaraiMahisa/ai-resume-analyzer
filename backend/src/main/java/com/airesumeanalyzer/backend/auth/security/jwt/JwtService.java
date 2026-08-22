@@ -1,5 +1,6 @@
 package com.airesumeanalyzer.backend.auth.security.jwt;
 
+import com.airesumeanalyzer.backend.auth.repository.UserRepository;
 import com.airesumeanalyzer.backend.auth.security.CurrentUserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -27,7 +28,6 @@ public class JwtService {
     private static final String REFRESH_TOKEN = "refresh";
 
     private final JwtProperties jwtProperties;
-
     private SecretKey signingKey;
 
     @PostConstruct

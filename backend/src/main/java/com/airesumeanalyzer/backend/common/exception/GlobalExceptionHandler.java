@@ -1,10 +1,7 @@
 package com.airesumeanalyzer.backend.common.exception;
 
 import com.airesumeanalyzer.backend.common.api.ApiResponse;
-import com.airesumeanalyzer.backend.common.exception.base.CompromisedCredentialsException;
-import com.airesumeanalyzer.backend.common.exception.base.ConflictException;
-import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundException;
-import com.airesumeanalyzer.backend.common.exception.base.UnauthorizedException;
+import com.airesumeanalyzer.backend.common.exception.base.*;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -63,6 +60,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Invalid email or password"));
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<ApiResponse<Void>> handleStorage(
+            StorageException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(
+            BadRequestException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

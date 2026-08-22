@@ -1,6 +1,10 @@
 package com.airesumeanalyzer.backend.auth.security.jwt;
 
 
+import com.airesumeanalyzer.backend.auth.entity.User;
+import com.airesumeanalyzer.backend.auth.repository.UserRepository;
+import com.airesumeanalyzer.backend.auth.security.CurrentUserPrincipal;
+import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(
@@ -75,11 +80,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request
     ) {
 
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found.")
+                );
+
+        CurrentUserPrincipal principal =
+                new CurrentUserPrincipal(user);
+
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
-                        email,
+                        principal,
                         null,
-                        null
+                        principal.getAuthorities()
                 );
 
         authentication.setDetails(
