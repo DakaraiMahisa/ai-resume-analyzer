@@ -2,6 +2,8 @@ package com.airesumeanalyzer.backend.common.exception;
 
 import com.airesumeanalyzer.backend.common.api.ApiResponse;
 import com.airesumeanalyzer.backend.common.exception.base.*;
+import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -78,6 +80,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ProcessingException.class)
+    public ResponseEntity<ApiResponse<Void>> handleProcessingException(
+            ProcessingException exception,
+            HttpServletRequest request
+    ) {
+        log.error(
+                "Processing error. traceId: {}",
+                request.getAttribute("traceId"),
+                exception
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(
+                        ApiResponse.error(
+                                exception.getMessage()
+                        )
+                );
     }
 
     @ExceptionHandler(Exception.class)

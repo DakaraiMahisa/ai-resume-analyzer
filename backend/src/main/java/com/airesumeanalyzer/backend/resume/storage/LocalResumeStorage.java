@@ -59,6 +59,28 @@ public class LocalResumeStorage implements ResumeStorage {
     }
 
     @Override
+    public InputStream load(String storagePath) {
+        Path targetPath = storageRoot
+                .resolve(storagePath)
+                .normalize();
+
+        if (!targetPath.startsWith(storageRoot)) {
+            throw new StorageException(
+                    "Invalid resume storage path"
+            );
+        }
+
+        try {
+            return Files.newInputStream(targetPath);
+        } catch (IOException exception) {
+            throw new StorageException(
+                    "Failed to read resume: " + storagePath,
+                    exception
+            );
+        }
+    }
+
+    @Override
     public void delete(String storagePath) {
 
         Path targetPath = storageRoot

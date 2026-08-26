@@ -8,6 +8,8 @@ import com.airesumeanalyzer.backend.common.exception.base.ConflictException;
 import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundException;
 import com.airesumeanalyzer.backend.common.exception.base.StorageException;
 import com.airesumeanalyzer.backend.common.util.ChecksumUtils;
+import com.airesumeanalyzer.backend.processing.enums.DocumentType;
+import com.airesumeanalyzer.backend.processing.service.ProcessingJobService;
 import com.airesumeanalyzer.backend.resume.dto.response.ResumeDetailResponse;
 import com.airesumeanalyzer.backend.resume.dto.response.ResumeSummaryResponse;
 import com.airesumeanalyzer.backend.resume.dto.response.ResumeUploadResponse;
@@ -33,7 +35,7 @@ public class ResumeService {
     private final ResumeRepository resumeRepository;
     private final UserRepository userRepository;
     private final ResumeStorage resumeStorage;
-
+    private final ProcessingJobService processingJobService;
 
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
@@ -41,6 +43,7 @@ public class ResumeService {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "text/plain"
     );
+    @Transactional
     public ResumeUploadResponse upload(
             UUID userId,
             MultipartFile file
@@ -97,6 +100,11 @@ public class ResumeService {
 
         try {
             savedResume = resumeRepository.saveAndFlush(resume);
+
+            processingJobService.createJob(
+                    DocumentType.RESUME,
+                    savedResume.getId()
+            );
         } catch (DataAccessException exception) {
 
             try {
