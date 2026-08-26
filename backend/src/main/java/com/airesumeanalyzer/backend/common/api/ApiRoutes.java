@@ -9,4 +9,6 @@ public final class ApiRoutes {
 
     public static final String AUTH = API_V1 + "/auth";
     public static final String RESUMES = API_V1 + "/resumes";
+
+    public static final String PROCESSING = API_V1 + "/processing";
 }

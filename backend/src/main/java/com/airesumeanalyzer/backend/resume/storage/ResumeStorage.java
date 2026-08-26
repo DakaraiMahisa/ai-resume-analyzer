@@ -10,6 +10,6 @@ public interface ResumeStorage {
             String originalFilename,
             InputStream content
     );
-
+    InputStream load(String storagePath);
     void delete(String storagePath);
 }
