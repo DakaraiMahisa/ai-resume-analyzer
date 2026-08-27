@@ -2,11 +2,10 @@ package com.airesumeanalyzer.backend.processing.service;
 
 import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundException;
 import com.airesumeanalyzer.backend.common.storage.DocumentStorage;
+import com.airesumeanalyzer.backend.jobdescription.entity.JobDescription;
+import com.airesumeanalyzer.backend.jobdescription.repository.JobDescriptionRepository;
 import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
 import com.airesumeanalyzer.backend.processing.extraction.TextExtractor;
-import com.airesumeanalyzer.backend.resume.entity.Resume;
-import com.airesumeanalyzer.backend.resume.repository.ResumeRepository;
-import com.airesumeanalyzer.backend.resume.storage.ResumeStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,34 +16,36 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ResumeProcessingService {
+public class JobDescriptionProcessingService {
 
-    private final ResumeRepository resumeRepository;
+    private final JobDescriptionRepository jobDescriptionRepository;
     private final DocumentStorage documentStorage;
     private final TextExtractor textExtractor;
 
-
     @Transactional
-    public void processResume(UUID resumeId) {
+    public void processJobDescription(UUID jobDescriptionId) {
 
-        Resume resume = resumeRepository.findById(resumeId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Resume not found."
-                        )
-                );
+        JobDescription jobDescription =
+                jobDescriptionRepository.findById(jobDescriptionId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Job description not found."
+                                )
+                        );
 
         try (InputStream inputStream =
-                     documentStorage.load(resume.getStoragePath())) {
+                     documentStorage.load(
+                             jobDescription.getStoragePath()
+                     )) {
 
             String extractedText =
                     textExtractor.extract(inputStream);
 
-            resume.setRawText(extractedText);
+            jobDescription.setRawText(extractedText);
 
         } catch (IOException exception) {
             throw new ProcessingException(
-                    "Unable to read the stored resume.",
+                    "Unable to read the stored job description.",
                     exception
             );
         }

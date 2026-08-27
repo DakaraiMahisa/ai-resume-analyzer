@@ -36,8 +36,8 @@ app:
     access-token-expiration: 15m
     refresh-token-expiration: 7d
 
-  storage:
-    resume-directory: ./storage/resumes
+storage:
+  document-directory: ./storage/documents
 
   frontend:
     url: ${FRONTEND_URL:http://localhost:5173}
