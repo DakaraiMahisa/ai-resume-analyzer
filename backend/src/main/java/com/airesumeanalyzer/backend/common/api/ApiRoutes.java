@@ -11,4 +11,6 @@ public final class ApiRoutes {
     public static final String RESUMES = API_V1 + "/resumes";
 
     public static final String PROCESSING = API_V1 + "/processing";
+    public static final String JOB_DESCRIPTIONS = API_V1 + "/job-descriptions";
+
 }

@@ -7,6 +7,7 @@ import com.airesumeanalyzer.backend.common.exception.base.BadRequestException;
 import com.airesumeanalyzer.backend.common.exception.base.ConflictException;
 import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundException;
 import com.airesumeanalyzer.backend.common.exception.base.StorageException;
+import com.airesumeanalyzer.backend.common.storage.DocumentStorage;
 import com.airesumeanalyzer.backend.common.util.ChecksumUtils;
 import com.airesumeanalyzer.backend.processing.enums.DocumentType;
 import com.airesumeanalyzer.backend.processing.service.ProcessingJobService;
@@ -15,7 +16,6 @@ import com.airesumeanalyzer.backend.resume.dto.response.ResumeSummaryResponse;
 import com.airesumeanalyzer.backend.resume.dto.response.ResumeUploadResponse;
 import com.airesumeanalyzer.backend.resume.entity.Resume;
 import com.airesumeanalyzer.backend.resume.repository.ResumeRepository;
-import com.airesumeanalyzer.backend.resume.storage.ResumeStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
@@ -34,9 +34,8 @@ public class ResumeService {
 
     private final ResumeRepository resumeRepository;
     private final UserRepository userRepository;
-    private final ResumeStorage resumeStorage;
     private final ProcessingJobService processingJobService;
-
+    private final DocumentStorage documentStorage;
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
             "application/pdf",
@@ -83,7 +82,8 @@ public class ResumeService {
         String storagePath;
 
         try {
-            storagePath = resumeStorage.store(
+            storagePath = documentStorage.store(
+                    DocumentType.RESUME,
                     storageKey,
                     file.getOriginalFilename(),
                     file.getInputStream()
@@ -108,7 +108,7 @@ public class ResumeService {
         } catch (DataAccessException exception) {
 
             try {
-                resumeStorage.delete(storagePath);
+                documentStorage.delete(storagePath);
             } catch (StorageException cleanupException) {
                 exception.addSuppressed(cleanupException);
             }
@@ -156,7 +156,7 @@ public class ResumeService {
 
         String storagePath = resume.getStoragePath();
 
-        resumeStorage.delete(storagePath);
+        documentStorage.delete(storagePath);
 
         resumeRepository.delete(resume);
     }

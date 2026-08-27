@@ -1,7 +1,6 @@
 package com.airesumeanalyzer.backend.processing.service;
 
 import com.airesumeanalyzer.backend.processing.entity.ProcessingJob;
-import com.airesumeanalyzer.backend.processing.enums.DocumentType;
 import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
 
 import lombok.RequiredArgsConstructor;
@@ -16,6 +15,7 @@ public class DocumentProcessingServiceImpl
 
     private final ProcessingJobService processingJobService;
     private final ResumeProcessingService resumeProcessingService;
+    private final JobDescriptionProcessingService jobDescriptionProcessingService;
 
     @Override
     public void process(UUID jobId) {
@@ -33,8 +33,9 @@ public class DocumentProcessingServiceImpl
                         job.getDocumentId()
                 );
 
-                case JOB_DESCRIPTION -> throw new ProcessingException(
-                        "Job description processing is not implemented yet."
+                case JOB_DESCRIPTION ->
+                        jobDescriptionProcessingService.processJobDescription(
+                        job.getDocumentId()
                 );
 
                 default -> throw new ProcessingException(
