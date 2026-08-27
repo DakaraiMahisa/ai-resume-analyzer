@@ -6,7 +6,6 @@ import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
 import com.airesumeanalyzer.backend.processing.extraction.TextExtractor;
 import com.airesumeanalyzer.backend.resume.entity.Resume;
 import com.airesumeanalyzer.backend.resume.repository.ResumeRepository;
-import com.airesumeanalyzer.backend.resume.storage.ResumeStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
