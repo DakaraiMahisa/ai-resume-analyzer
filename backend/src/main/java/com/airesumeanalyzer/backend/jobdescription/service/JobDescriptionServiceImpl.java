@@ -215,7 +215,6 @@ public class JobDescriptionServiceImpl implements JobDescriptionService {
     }
 
 
-
     @Override
     @Transactional
     public void delete(
@@ -241,18 +240,18 @@ public class JobDescriptionServiceImpl implements JobDescriptionService {
     private void validateFile(MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
-            throw new BadRequestException("Resume file must not be empty.");
+            throw new BadRequestException("Job description file must not be empty.");
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new BadRequestException(
-                    "Resume file must not exceed 5 MB."
+                    "Job description file must not exceed 5 MB."
             );
         }
 
         if (!ALLOWED_CONTENT_TYPES.contains(file.getContentType())) {
             throw new BadRequestException(
-                    "Unsupported resume file type. Only PDF, DOCX, and TXT files are allowed."
+                    "Unsupported Job description file type. Only PDF, DOCX, and TXT files are allowed."
             );
         }
     }

@@ -102,6 +102,19 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(InvalidDocumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidDocument(
+            InvalidDocumentException exception
+    ) {
+        return ResponseEntity
+                .badRequest()
+                .body(
+                        ApiResponse.error(
+                                exception.getMessage()
+                        )
+                );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(
             Exception ex) {
