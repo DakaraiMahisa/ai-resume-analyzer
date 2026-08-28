@@ -1,5 +1,7 @@
 package com.airesumeanalyzer.backend.processing.service;
 
+import com.airesumeanalyzer.backend.ai.model.understanding.StructuredResume;
+import com.airesumeanalyzer.backend.ai.service.ResumeUnderstandingService;
 import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundException;
 import com.airesumeanalyzer.backend.common.storage.DocumentStorage;
 import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
@@ -9,6 +11,7 @@ import com.airesumeanalyzer.backend.resume.repository.ResumeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +24,9 @@ public class ResumeProcessingService {
     private final ResumeRepository resumeRepository;
     private final DocumentStorage documentStorage;
     private final TextExtractor textExtractor;
+    private final ResumeUnderstandingService resumeUnderstandingService;
+    private final ObjectMapper objectMapper;
+
 
 
     @Transactional
@@ -40,7 +46,12 @@ public class ResumeProcessingService {
                     textExtractor.extract(inputStream);
 
             resume.setRawText(extractedText);
+            StructuredResume structuredResume =
+                    resumeUnderstandingService.understand(extractedText);
 
+            resume.setStructuredData(
+                    objectMapper.writeValueAsString(structuredResume)
+            );
         } catch (IOException exception) {
             throw new ProcessingException(
                     "Unable to read the stored resume.",
