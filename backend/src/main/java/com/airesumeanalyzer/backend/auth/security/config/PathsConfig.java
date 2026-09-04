@@ -32,7 +32,9 @@ public class PathsConfig {
         return List.of(
                 "/api/v1/resumes/**",
                 "/api/v1/processing/**",
-                "/api/v1/job-descriptions/**"
+                "/api/v1/job-descriptions/**",
+                "/api/v1/matching/**"
+
         );
     }
 
