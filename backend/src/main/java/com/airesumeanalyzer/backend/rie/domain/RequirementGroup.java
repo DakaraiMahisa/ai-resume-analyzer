@@ -4,17 +4,11 @@ import java.util.Objects;
 import java.util.UUID;
 
 public record RequirementGroup(
-        UUID requirementClaimId,
         RequirementOperator operator,
         List<RequirementExpression> expressions
 ) implements RequirementExpression {
 
     public RequirementGroup {
-        Objects.requireNonNull(
-                requirementClaimId,
-                "requirementClaimId must not be null"
-        );
-
         Objects.requireNonNull(
                 operator,
                 "operator must not be null"

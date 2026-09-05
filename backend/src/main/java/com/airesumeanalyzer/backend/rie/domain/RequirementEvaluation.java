@@ -4,19 +4,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+
 public record RequirementEvaluation(
-        UUID requirementClaimId,
         RequirementExpression expression,
         List<RequirementMatch> matches,
         RequirementCoverage coverage
 ) {
 
     public RequirementEvaluation {
-        Objects.requireNonNull(
-                requirementClaimId,
-                "requirementClaimId must not be null"
-        );
-
         Objects.requireNonNull(
                 expression,
                 "expression must not be null"

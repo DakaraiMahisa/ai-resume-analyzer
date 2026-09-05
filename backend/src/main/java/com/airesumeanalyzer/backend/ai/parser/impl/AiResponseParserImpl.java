@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class AiResponseParserImpl implements AiResponseParser {
@@ -53,32 +56,54 @@ public class AiResponseParserImpl implements AiResponseParser {
                 );
 
         structuredResume.education()
-                .forEach(education ->
-                        claims.add(
-                                ProposedClaim.builder()
-                                        .claimType(ClaimType.EDUCATION)
-                                        .extractedValue(
-                                                education.degree()
-                                                        + " - "
-                                                        + education.institution()
-                                        )
-                                        .priority(ClaimPriority.NOT_APPLICABLE)
-                                        .sourceDocumentId(sourceDocumentId)
-                                        .build()
-                        )
-                );
+                .forEach(education -> {
+
+                    String educationValue =
+                            Stream.of(
+                                            education.degree(),
+                                            education.fieldOfStudy(),
+                                            education.institution()
+                                    )
+                                    .filter(Objects::nonNull)
+                                    .filter(value -> !value.isBlank())
+                                    .collect(Collectors.joining(" - "));
+
+                    claims.add(
+                            ProposedClaim.builder()
+                                    .claimType(ClaimType.EDUCATION)
+                                    .extractedValue(educationValue)
+                                    .priority(ClaimPriority.NOT_APPLICABLE)
+                                    .sourceDocumentId(sourceDocumentId)
+                                    .build()
+                    );
+                });
 
         structuredResume.projects()
-                .forEach(project ->
-                        claims.add(
-                                ProposedClaim.builder()
-                                        .claimType(ClaimType.PROJECT)
-                                        .extractedValue(project.name())
-                                        .priority(ClaimPriority.NOT_APPLICABLE)
-                                        .sourceDocumentId(sourceDocumentId)
-                                        .build()
-                        )
-                );
+                .forEach(project -> {
+
+                    claims.add(
+                            ProposedClaim.builder()
+                                    .claimType(ClaimType.PROJECT)
+                                    .extractedValue(project.name())
+                                    .priority(ClaimPriority.NOT_APPLICABLE)
+                                    .sourceDocumentId(sourceDocumentId)
+                                    .build()
+                    );
+
+                    if (project.technologies() != null) {
+                        project.technologies()
+                                .forEach(technology ->
+                                        claims.add(
+                                                ProposedClaim.builder()
+                                                        .claimType(ClaimType.SKILL)
+                                                        .extractedValue(technology)
+                                                        .priority(ClaimPriority.NOT_APPLICABLE)
+                                                        .sourceDocumentId(sourceDocumentId)
+                                                        .build()
+                                        )
+                                );
+                    }
+                });
 
         structuredResume.certifications()
                 .forEach(certification ->
@@ -95,6 +120,7 @@ public class AiResponseParserImpl implements AiResponseParser {
         return claims;
     }
 
+
     @Override
     public List<ProposedClaim> parseJobDescription(
             StructuredJobDescription structuredJobDescription,
@@ -104,26 +130,24 @@ public class AiResponseParserImpl implements AiResponseParser {
         List<ProposedClaim> claims = new ArrayList<>();
 
         structuredJobDescription.requiredSkills()
-                .forEach(skill ->
-                        claims.add(
-                                ProposedClaim.builder()
-                                        .claimType(ClaimType.SKILL)
-                                        .extractedValue(skill)
-                                        .priority(ClaimPriority.REQUIRED)
-                                        .sourceDocumentId(sourceDocumentId)
-                                        .build()
+                .forEach(requirement ->
+                        addRequirementClaims(
+                                requirement,
+                                ClaimType.SKILL,
+                                ClaimPriority.REQUIRED,
+                                sourceDocumentId,
+                                claims
                         )
                 );
 
         structuredJobDescription.preferredSkills()
-                .forEach(skill ->
-                        claims.add(
-                                ProposedClaim.builder()
-                                        .claimType(ClaimType.SKILL)
-                                        .extractedValue(skill)
-                                        .priority(ClaimPriority.PREFERRED)
-                                        .sourceDocumentId(sourceDocumentId)
-                                        .build()
+                .forEach(requirement ->
+                        addRequirementClaims(
+                                requirement,
+                                ClaimType.SKILL,
+                                ClaimPriority.PREFERRED,
+                                sourceDocumentId,
+                                claims
                         )
                 );
 
@@ -140,53 +164,91 @@ public class AiResponseParserImpl implements AiResponseParser {
                 );
 
         structuredJobDescription.requiredExperience()
-                .forEach(experience ->
-                        claims.add(
-                                ProposedClaim.builder()
-                                        .claimType(ClaimType.EXPERIENCE)
-                                        .extractedValue(experience)
-                                        .priority(ClaimPriority.REQUIRED)
-                                        .sourceDocumentId(sourceDocumentId)
-                                        .build()
+                .forEach(requirement ->
+                        addRequirementClaims(
+                                requirement,
+                                ClaimType.EXPERIENCE,
+                                ClaimPriority.REQUIRED,
+                                sourceDocumentId,
+                                claims
                         )
                 );
 
         structuredJobDescription.preferredExperience()
-                .forEach(experience ->
-                        claims.add(
-                                ProposedClaim.builder()
-                                        .claimType(ClaimType.EXPERIENCE)
-                                        .extractedValue(experience)
-                                        .priority(ClaimPriority.PREFERRED)
-                                        .sourceDocumentId(sourceDocumentId)
-                                        .build()
+                .forEach(requirement ->
+                        addRequirementClaims(
+                                requirement,
+                                ClaimType.EXPERIENCE,
+                                ClaimPriority.PREFERRED,
+                                sourceDocumentId,
+                                claims
                         )
                 );
 
         structuredJobDescription.requiredQualifications()
-                .forEach(qualification ->
-                        claims.add(
-                                ProposedClaim.builder()
-                                        .claimType(ClaimType.EDUCATION)
-                                        .extractedValue(qualification)
-                                        .priority(ClaimPriority.REQUIRED)
-                                        .sourceDocumentId(sourceDocumentId)
-                                        .build()
+                .forEach(requirement ->
+                        addRequirementClaims(
+                                requirement,
+                                ClaimType.EDUCATION,
+                                ClaimPriority.REQUIRED,
+                                sourceDocumentId,
+                                claims
                         )
                 );
 
         structuredJobDescription.preferredQualifications()
-                .forEach(qualification ->
-                        claims.add(
-                                ProposedClaim.builder()
-                                        .claimType(ClaimType.EDUCATION)
-                                        .extractedValue(qualification)
-                                        .priority(ClaimPriority.PREFERRED)
-                                        .sourceDocumentId(sourceDocumentId)
-                                        .build()
+                .forEach(requirement ->
+                        addRequirementClaims(
+                                requirement,
+                                ClaimType.EDUCATION,
+                                ClaimPriority.PREFERRED,
+                                sourceDocumentId,
+                                claims
                         )
                 );
 
         return claims;
     }
+
+    private void addRequirementClaims(
+            StructuredJobDescription.Requirement requirement,
+            ClaimType claimType,
+            ClaimPriority priority,
+            UUID sourceDocumentId,
+            List<ProposedClaim> claims
+    ) {
+
+        if (requirement == null) {
+            return;
+        }
+
+        if (requirement.value() != null
+                && !requirement.value().isBlank()) {
+
+            claims.add(
+                    ProposedClaim.builder()
+                            .claimType(claimType)
+                            .extractedValue(requirement.value())
+                            .priority(priority)
+                            .sourceDocumentId(sourceDocumentId)
+                            .build()
+            );
+        }
+
+        if (requirement.components() == null) {
+            return;
+        }
+
+        requirement.components()
+                .forEach(component ->
+                        addRequirementClaims(
+                                component,
+                                claimType,
+                                priority,
+                                sourceDocumentId,
+                                claims
+                        )
+                );
+    }
+
 }

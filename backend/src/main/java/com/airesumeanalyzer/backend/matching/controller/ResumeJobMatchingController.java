@@ -3,7 +3,7 @@ package com.airesumeanalyzer.backend.matching.controller;
 import com.airesumeanalyzer.backend.common.api.ApiResponse;
 import com.airesumeanalyzer.backend.common.api.ApiRoutes;
 import com.airesumeanalyzer.backend.matching.service.ResumeJobMatchingService;
-import com.airesumeanalyzer.backend.rie.domain.RequirementEvaluation;
+import com.airesumeanalyzer.backend.rie.domain.RequirementMatchResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,12 +24,12 @@ public class ResumeJobMatchingController {
     @PostMapping(
             "/resumes/{resumeId}/job-descriptions/{jobDescriptionId}/match"
     )
-    public ResponseEntity<ApiResponse<List<RequirementEvaluation>>> match(
+    public ResponseEntity<ApiResponse<List<RequirementMatchResult>>> match(
             @PathVariable UUID resumeId,
             @PathVariable UUID jobDescriptionId
     ) {
 
-        List<RequirementEvaluation> evaluations =
+        List<RequirementMatchResult> evaluations =
                 resumeJobMatchingService.match(
                         resumeId,
                         jobDescriptionId
