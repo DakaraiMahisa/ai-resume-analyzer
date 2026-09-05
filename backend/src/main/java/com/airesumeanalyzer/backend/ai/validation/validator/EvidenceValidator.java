@@ -2,7 +2,9 @@ package com.airesumeanalyzer.backend.ai.validation.validator;
 
 import com.airesumeanalyzer.backend.ai.model.claims.ProposedClaim;
 import com.airesumeanalyzer.backend.ai.model.validation.ValidationResult;
+import org.springframework.stereotype.Component;
 
+@Component
 public class EvidenceValidator implements ClaimValidator {
 
     @Override

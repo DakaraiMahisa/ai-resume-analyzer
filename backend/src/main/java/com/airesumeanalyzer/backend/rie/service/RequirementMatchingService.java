@@ -1,13 +1,10 @@
 package com.airesumeanalyzer.backend.rie.service;
 
 import com.airesumeanalyzer.backend.ai.domain.entity.Claim;
-import com.airesumeanalyzer.backend.rie.domain.RequirementCoverage;
-import com.airesumeanalyzer.backend.rie.domain.RequirementCoverageCalculator;
-import com.airesumeanalyzer.backend.rie.domain.RequirementEvaluation;
-import com.airesumeanalyzer.backend.rie.domain.RequirementExpression;
-import com.airesumeanalyzer.backend.rie.domain.RequirementMatch;
+import com.airesumeanalyzer.backend.ai.model.understanding.StructuredJobDescription;
+import com.airesumeanalyzer.backend.rie.domain.*;
 import com.airesumeanalyzer.backend.rie.matcher.RequirementMatcher;
-import com.airesumeanalyzer.backend.rie.requirement.RequirementDecomposer;
+import com.airesumeanalyzer.backend.rie.requirement.StructuredRequirementExpressionBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,16 +17,22 @@ import java.util.Objects;
 public class RequirementMatchingService {
 
     private final RequirementMatcher requirementMatcher;
-    private final RequirementDecomposer requirementDecomposer;
+    private final StructuredRequirementExpressionBuilder expressionBuilder;
     private final RequirementCoverageCalculator coverageCalculator;
 
-    public List<RequirementEvaluation> match(
-            List<Claim> requirements,
+    public List<RequirementMatchResult> match(
+            List<RequirementToEvaluate> requirements,
+            List<Claim> requirementClaims,
             List<Claim> resumeClaims
     ) {
         Objects.requireNonNull(
                 requirements,
                 "requirements must not be null"
+        );
+
+        Objects.requireNonNull(
+                requirementClaims,
+                "requirementClaims must not be null"
         );
 
         Objects.requireNonNull(
@@ -41,21 +44,25 @@ public class RequirementMatchingService {
             return List.of();
         }
 
-        List<RequirementEvaluation> evaluations =
+        List<RequirementMatchResult> evaluations =
                 new ArrayList<>();
 
-        for (Claim requirement : requirements) {
+        for (RequirementToEvaluate requirementToEvaluate : requirements) {
 
-            if (requirement == null) {
+            if (requirementToEvaluate == null) {
                 continue;
             }
 
+            StructuredJobDescription.Requirement requirement =
+                    requirementToEvaluate.requirement();
+
             RequirementExpression expression =
                     Objects.requireNonNull(
-                            requirementDecomposer.decompose(
-                                    requirement
+                            expressionBuilder.build(
+                                    requirement,
+                                    requirementClaims
                             ),
-                            "decomposer returned null expression"
+                            "expression builder returned null expression"
                     );
 
             List<RequirementMatch> matches =
@@ -70,12 +77,18 @@ public class RequirementMatchingService {
                             matches
                     );
 
-            evaluations.add(
+            RequirementEvaluation evaluation =
                     new RequirementEvaluation(
-                            requirement.getId(),
                             expression,
                             matches,
                             coverage
+                    );
+
+            evaluations.add(
+                    new RequirementMatchResult(
+                            requirement,
+                            requirementToEvaluate.priority(),
+                            evaluation
                     )
             );
         }
@@ -83,4 +96,5 @@ public class RequirementMatchingService {
         return List.copyOf(evaluations);
     }
 }
+
 

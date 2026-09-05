@@ -9,11 +9,26 @@ public record StructuredJobDescription(
         String jobTitle,
         String summary,
         List<String> responsibilities,
-        List<String> requiredSkills,
-        List<String> preferredSkills,
-        List<String> requiredQualifications,
-        List<String> preferredQualifications,
-        List<String> requiredExperience,
-        List<String> preferredExperience
+        List<Requirement> requiredSkills,
+        List<Requirement> preferredSkills,
+        List<Requirement> requiredQualifications,
+        List<Requirement> preferredQualifications,
+        List<Requirement> requiredExperience,
+        List<Requirement> preferredExperience
 ) {
+
+    public record Requirement(
+            String value,
+            Operator operator,
+            List<Requirement> components,
+            String originalText
+    ) {
+    }
+
+    public enum Operator {
+        ATOMIC,
+        ALL,
+        ANY
+    }
 }
+
