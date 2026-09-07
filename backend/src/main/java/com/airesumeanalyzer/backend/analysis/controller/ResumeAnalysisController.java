@@ -1,6 +1,6 @@
 package com.airesumeanalyzer.backend.analysis.controller;
 
-import com.airesumeanalyzer.backend.ats.domain.model.ATSResult;
+import com.airesumeanalyzer.backend.analysis.model.ResumeAnalysisResponse;
 import com.airesumeanalyzer.backend.analysis.service.ResumeAnalysisService;
 
 import com.airesumeanalyzer.backend.common.api.ApiResponse;
@@ -21,12 +21,12 @@ public class ResumeAnalysisController {
     @PostMapping(
             "/resumes/{resumeId}/job-descriptions/{jobDescriptionId}/analyze"
     )
-    public ResponseEntity<ApiResponse<ATSResult>> analyze(
+    public ResponseEntity<ApiResponse<ResumeAnalysisResponse>> analyze(
             @PathVariable UUID resumeId,
             @PathVariable UUID jobDescriptionId
     ) {
 
-        ATSResult result =
+        ResumeAnalysisResponse result =
                 resumeAnalysisService.analyze(
                         resumeId,
                         jobDescriptionId
