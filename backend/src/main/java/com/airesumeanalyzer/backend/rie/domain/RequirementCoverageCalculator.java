@@ -174,12 +174,20 @@ public final class RequirementCoverageCalculator {
             return false;
         }
 
-        return match.requirementClaimId()
-                .equals(component.requirementClaimId())
-                && match.requirementComponentValue()
-                .equalsIgnoreCase(
-                        component.value()
-                );
+        if (!match.requirementClaimId()
+                .equals(component.requirementClaimId())) {
+            return false;
+        }
+
+        if (!match.requirementComponentValue()
+                .equalsIgnoreCase(component.value())) {
+            return false;
+        }
+
+        return switch (match.relationship()) {
+            case EXACT, EQUIVALENT, SATISFIES -> true;
+            case RELATED, UNRELATED -> false;
+        };
     }
 }
 

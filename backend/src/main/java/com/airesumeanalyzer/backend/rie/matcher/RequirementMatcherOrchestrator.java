@@ -1,28 +1,40 @@
 package com.airesumeanalyzer.backend.rie.matcher;
 
-import com.airesumeanalyzer.backend.ai.domain.entity.Claim;
-import com.airesumeanalyzer.backend.rie.capability.Capability;
-import com.airesumeanalyzer.backend.rie.capability.CapabilityResolver;
-import com.airesumeanalyzer.backend.rie.domain.*;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.airesumeanalyzer.backend.ai.domain.entity.Claim;
+import com.airesumeanalyzer.backend.rie.capability.CanonicalCapabilityMatcher;
+import com.airesumeanalyzer.backend.rie.capability.CapabilityMatcher;
+import com.airesumeanalyzer.backend.rie.capability.SemanticCapabilityMatcher;
+import com.airesumeanalyzer.backend.rie.domain.RequirementComponent;
+import com.airesumeanalyzer.backend.rie.domain.RequirementExpression;
+import com.airesumeanalyzer.backend.rie.domain.RequirementGroup;
+import com.airesumeanalyzer.backend.rie.domain.RequirementMatch;
+import org.springframework.stereotype.Component;
+
 @Component
-public final class CanonicalMatcher
+public final class RequirementMatcherOrchestrator
         implements RequirementMatcher {
 
-    private final CapabilityResolver capabilityResolver;
+    private final CapabilityMatcher canonicalMatcher;
+    private final CapabilityMatcher semanticMatcher;
 
-    public CanonicalMatcher(
-            CapabilityResolver capabilityResolver
+    public RequirementMatcherOrchestrator(
+            CanonicalCapabilityMatcher canonicalMatcher,
+            SemanticCapabilityMatcher semanticMatcher
     ) {
-        this.capabilityResolver =
+        this.canonicalMatcher =
                 Objects.requireNonNull(
-                        capabilityResolver,
-                        "capabilityResolver must not be null"
+                        canonicalMatcher,
+                        "canonicalMatcher must not be null"
+                );
+
+        this.semanticMatcher =
+                Objects.requireNonNull(
+                        semanticMatcher,
+                        "semanticMatcher must not be null"
                 );
     }
 
@@ -69,18 +81,12 @@ public final class CanonicalMatcher
             RequirementExpression expression,
             Claim resumeClaim
     ) {
-
         if (expression instanceof RequirementComponent component) {
 
-            RequirementMatch match =
-                    matchComponent(
-                            component,
-                            resumeClaim
-                    );
-
-            return match == null
-                    ? List.of()
-                    : List.of(match);
+            return matchComponent(
+                    component,
+                    resumeClaim
+            );
         }
 
         if (expression instanceof RequirementGroup group) {
@@ -108,43 +114,19 @@ public final class CanonicalMatcher
         );
     }
 
-    private RequirementMatch matchComponent(
-            RequirementComponent requirementComponent,
+    private List<RequirementMatch> matchComponent(
+            RequirementComponent requirement,
             Claim resumeClaim
     ) {
-
-        String resumeValue =
-                resumeClaim.getCanonicalName();
-
-        if (resumeValue == null
-                || resumeValue.isBlank()) {
-            return null;
-        }
-
-        Capability requirementCapability =
-                capabilityResolver.resolve(
-                        requirementComponent.value()
-                );
-
-        Capability resumeCapability =
-                capabilityResolver.resolve(
-                        resumeValue
-                );
-
-        if (!requirementCapability.name()
-                .equalsIgnoreCase(
-                        resumeCapability.name()
-                )) {
-            return null;
-        }
-
-        return new RequirementMatch(
-                requirementComponent.requirementClaimId(),
-                requirementComponent.value(),
-                resumeClaim.getId(),
-                MatchRelationship.EXACT_MATCH,
-                MatchingMethod.CANONICAL
-        );
+        return canonicalMatcher
+                .match(requirement, resumeClaim)
+                .or(() ->
+                        semanticMatcher.match(
+                                requirement,
+                                resumeClaim
+                        )
+                )
+                .stream()
+                .toList();
     }
 }
-

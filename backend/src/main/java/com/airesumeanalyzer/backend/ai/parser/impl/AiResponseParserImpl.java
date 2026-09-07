@@ -229,6 +229,7 @@ public class AiResponseParserImpl implements AiResponseParser {
                     ProposedClaim.builder()
                             .claimType(claimType)
                             .extractedValue(requirement.value())
+                            .originalText(requirement.originalText())
                             .priority(priority)
                             .sourceDocumentId(sourceDocumentId)
                             .build()

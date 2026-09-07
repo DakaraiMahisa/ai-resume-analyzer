@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Component
 @Slf4j
@@ -30,8 +31,8 @@ public class DeterministicEvidenceLocator implements EvidenceLocator {
 
         String searchValue = extractedValue.trim();
 
-        String searchableText = rawText.toLowerCase();
-        String searchableValue = searchValue.toLowerCase();
+        String searchableText = rawText.toLowerCase(Locale.ROOT);
+        String searchableValue = searchValue.toLowerCase(Locale.ROOT);
 
         int fromIndex = 0;
 
@@ -50,22 +51,55 @@ public class DeterministicEvidenceLocator implements EvidenceLocator {
             int endOffset =
                     startOffset + searchableValue.length();
 
-            evidenceList.add(
-                    Evidence.builder()
-                            .text(
-                                    rawText.substring(
-                                            startOffset,
-                                            endOffset
-                                    )
-                            )
-                            .startOffset(startOffset)
-                            .endOffset(endOffset)
-                            .build()
-            );
+            if (isValidBoundary(
+                    searchableText,
+                    startOffset,
+                    endOffset
+            )) {
+
+                evidenceList.add(
+                        Evidence.builder()
+                                .text(
+                                        rawText.substring(
+                                                startOffset,
+                                                endOffset
+                                        )
+                                )
+                                .startOffset(startOffset)
+                                .endOffset(endOffset)
+                                .build()
+                );
+            }
 
             fromIndex = endOffset;
         }
 
         return evidenceList;
+    }
+
+    private boolean isValidBoundary(
+            String text,
+            int startOffset,
+            int endOffset
+    ) {
+
+        boolean validLeftBoundary =
+                startOffset == 0
+                        || !isTokenCharacter(
+                        text.charAt(startOffset - 1)
+                );
+
+        boolean validRightBoundary =
+                endOffset == text.length()
+                        || !isTokenCharacter(
+                        text.charAt(endOffset)
+                );
+
+        return validLeftBoundary && validRightBoundary;
+    }
+
+    private boolean isTokenCharacter(char character) {
+
+        return Character.isLetterOrDigit(character);
     }
 }

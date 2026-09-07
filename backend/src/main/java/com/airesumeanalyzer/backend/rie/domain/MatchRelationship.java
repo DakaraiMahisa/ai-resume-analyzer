@@ -2,13 +2,13 @@ package com.airesumeanalyzer.backend.rie.domain;
 
 public enum MatchRelationship {
 
-    EXACT_MATCH,
+    EXACT,
 
-    ALIAS_MATCH,
+    EQUIVALENT,
 
-    SEMANTIC_MATCH,
+    SATISFIES,
 
-    PARTIAL_MATCH,
+    RELATED,
 
-    NO_MATCH
+    UNRELATED
 }
