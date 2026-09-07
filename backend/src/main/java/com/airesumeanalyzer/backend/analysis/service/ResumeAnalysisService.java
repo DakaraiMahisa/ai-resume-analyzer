@@ -1,8 +1,11 @@
 package com.airesumeanalyzer.backend.analysis.service;
 
+import com.airesumeanalyzer.backend.analysis.model.ResumeAnalysisResponse;
 import com.airesumeanalyzer.backend.ats.domain.model.ATSResult;
 import com.airesumeanalyzer.backend.ats.service.ATSScoringService;
 import com.airesumeanalyzer.backend.matching.service.ResumeJobMatchingService;
+import com.airesumeanalyzer.backend.recommendation.model.RecommendationResponse;
+import com.airesumeanalyzer.backend.recommendation.service.RecommendationService;
 import com.airesumeanalyzer.backend.rie.domain.RequirementMatchResult;
 
 import lombok.RequiredArgsConstructor;
@@ -19,9 +22,10 @@ public class ResumeAnalysisService {
 
     private final ResumeJobMatchingService resumeJobMatchingService;
     private final ATSScoringService atsScoringService;
+    private final RecommendationService recommendationService;
 
     @Transactional(readOnly = true)
-    public ATSResult analyze(
+    public ResumeAnalysisResponse analyze(
             UUID resumeId,
             UUID jobDescriptionId
     ) {
@@ -42,8 +46,19 @@ public class ResumeAnalysisService {
                         jobDescriptionId
                 );
 
-        return atsScoringService.score(
-                requirementResults
+        ATSResult atsResult =
+                atsScoringService.score(
+                        requirementResults
+                );
+
+        RecommendationResponse recommendation =
+                recommendationService.recommend(
+                        atsResult
+                );
+
+        return new ResumeAnalysisResponse(
+                atsResult,
+                recommendation
         );
     }
 }
