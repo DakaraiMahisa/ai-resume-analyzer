@@ -24,15 +24,22 @@ public class EvidenceEnricherImpl implements EvidenceEnricher {
         return claims.stream()
                 .map(claim -> {
 
+                    String evidenceText =
+                            claim.originalText() != null
+                                    && !claim.originalText().isBlank()
+                                    ? claim.originalText()
+                                    : claim.extractedValue();
+
                     List<Evidence> evidence =
                             evidenceLocator.locate(
                                     rawText,
-                                    claim.extractedValue()
+                                    evidenceText
                             );
 
                     return ProposedClaim.builder()
                             .claimType(claim.claimType())
                             .extractedValue(claim.extractedValue())
+                            .originalText(claim.originalText())
                             .evidence(evidence)
                             .sourceDocumentId(claim.sourceDocumentId())
                             .priority(claim.priority())

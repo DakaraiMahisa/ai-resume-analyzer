@@ -31,10 +31,14 @@ spring:
         api-key: ${GEMINI_API_KEY}
         chat:
           model: ${GEMINI_CHAT_MODEL:gemini-2.5-flash}
+
   output:
     ansi:
       enabled: ALWAYS
-
+ollama:
+  embedding:
+    base-url: http://localhost:11434
+    model: qwen3-embedding:0.6b
 
 server:
   port: 8080

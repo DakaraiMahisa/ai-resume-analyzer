@@ -14,5 +14,6 @@ public final class ApiRoutes {
     public static final String JOB_DESCRIPTIONS = API_V1 + "/job-descriptions";
 
     public static final String MATCHING = API_V1 + "/matching";
+    public static final String ANALYSIS = API_V1 + "/analysis";
 
 }
