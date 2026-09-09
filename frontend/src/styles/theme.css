@@ -1,0 +1,553 @@
+/*
+ * THEME CONTRACT — Layer 2
+ * AI Resume Analyzer
+ *
+ * Responsibilities:
+ * - Map primitive tokens to semantic application tokens
+ * - Define light and dark themes
+ * - Expose semantic tokens to Tailwind CSS
+ * - Provide shadcn/ui compatibility
+ *
+ * Architecture:
+ *
+ *   tokens.css
+ *       ↓
+ *   primitive values
+ *       ↓
+ *   semantic theme tokens
+ *       ↓
+ *   Tailwind @theme
+ *       ↓
+ *   components / modules
+ *
+ * Components and modules should consume semantic tokens,
+ * never primitive color ramps directly.
+ */
+
+@import "./tokens.css";
+@import "tailwindcss";
+
+/* =========================================================
+ * DARK MODE
+ *
+ * Tailwind's dark:* utilities activate when an ancestor
+ * contains the .dark class.
+ * ========================================================= */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =========================================================
+ * SEMANTIC THEME TOKENS
+ *
+ * These are the application's semantic source of truth.
+ *
+ * Primitive tokens such as --brand-600 or --neutral-900
+ * should not be consumed directly by components.
+ * ========================================================= */
+
+:root {
+  /* ---------------------------------------------------------
+   * SURFACES
+   * --------------------------------------------------------- */
+
+  --theme-background: var(--neutral-50);
+  --theme-surface: var(--neutral-0);
+  --theme-surface-subtle: var(--neutral-50);
+  --theme-surface-raised: var(--neutral-0);
+  --theme-surface-overlay: var(--neutral-0);
+
+  /* ---------------------------------------------------------
+   * TEXT
+   * --------------------------------------------------------- */
+
+  --theme-text-primary: var(--neutral-900);
+  --theme-text-secondary: var(--neutral-600);
+  --theme-text-muted: var(--neutral-500);
+  --theme-text-disabled: var(--neutral-400);
+  --theme-text-inverse: var(--neutral-0);
+
+  /* ---------------------------------------------------------
+   * BORDERS
+   * --------------------------------------------------------- */
+
+  --theme-border: var(--neutral-200);
+  --theme-border-strong: var(--neutral-300);
+  --theme-border-subtle: var(--neutral-100);
+
+  /* ---------------------------------------------------------
+   * BRAND
+   * --------------------------------------------------------- */
+
+  --theme-brand: var(--brand-600);
+  --theme-brand-hover: var(--brand-700);
+  --theme-brand-active: var(--brand-800);
+  --theme-brand-tint: var(--brand-50);
+  --theme-brand-subtle: var(--brand-100);
+
+  /* ---------------------------------------------------------
+   * SUCCESS
+   * --------------------------------------------------------- */
+
+  --theme-success: var(--success-600);
+  --theme-success-hover: var(--success-700);
+  --theme-success-active: var(--success-800);
+  --theme-success-tint: var(--success-50);
+  --theme-success-subtle: var(--success-100);
+
+  /* ---------------------------------------------------------
+   * WARNING
+   * --------------------------------------------------------- */
+
+  --theme-warning: var(--warning-600);
+  --theme-warning-hover: var(--warning-700);
+  --theme-warning-active: var(--warning-800);
+  --theme-warning-tint: var(--warning-50);
+  --theme-warning-subtle: var(--warning-100);
+
+  /* ---------------------------------------------------------
+   * DANGER
+   * --------------------------------------------------------- */
+
+  --theme-danger: var(--danger-600);
+  --theme-danger-hover: var(--danger-700);
+  --theme-danger-active: var(--danger-800);
+  --theme-danger-tint: var(--danger-50);
+  --theme-danger-subtle: var(--danger-100);
+
+  /* ---------------------------------------------------------
+   * INFO
+   * --------------------------------------------------------- */
+
+  --theme-info: var(--info-600);
+  --theme-info-hover: var(--info-700);
+  --theme-info-active: var(--info-800);
+  --theme-info-tint: var(--info-50);
+  --theme-info-subtle: var(--info-100);
+
+  /* =========================================================
+   * ANALYSIS SEMANTICS
+   *
+   * These tokens represent product concepts rather than
+   * generic colors.
+   *
+   * RIE and ATS should consume these semantic meanings.
+   * ========================================================= */
+
+  /* ---------------------------------------------------------
+   * Match
+   * --------------------------------------------------------- */
+
+  --theme-match: var(--success-600);
+  --theme-match-hover: var(--success-700);
+  --theme-match-tint: var(--success-50);
+  --theme-match-subtle: var(--success-100);
+
+  /* ---------------------------------------------------------
+   * Partial
+   * --------------------------------------------------------- */
+
+  --theme-partial: var(--warning-600);
+  --theme-partial-hover: var(--warning-700);
+  --theme-partial-tint: var(--warning-50);
+  --theme-partial-subtle: var(--warning-100);
+
+  /* ---------------------------------------------------------
+   * Mismatch
+   * --------------------------------------------------------- */
+
+  --theme-mismatch: var(--danger-600);
+  --theme-mismatch-hover: var(--danger-700);
+  --theme-mismatch-tint: var(--danger-50);
+  --theme-mismatch-subtle: var(--danger-100);
+
+  /* ---------------------------------------------------------
+   * Processing
+   * --------------------------------------------------------- */
+
+  --theme-processing: var(--info-600);
+  --theme-processing-hover: var(--info-700);
+  --theme-processing-tint: var(--info-50);
+  --theme-processing-subtle: var(--info-100);
+
+  /* ---------------------------------------------------------
+   * Neutral analysis state
+   * --------------------------------------------------------- */
+
+  --theme-analysis-neutral: var(--neutral-500);
+  --theme-analysis-neutral-tint: var(--neutral-100);
+
+  /* =========================================================
+   * FORM / INTERACTION
+   * ========================================================= */
+
+  --theme-input: var(--theme-border);
+  --theme-input-hover: var(--theme-border-strong);
+
+  --theme-ring: var(--theme-brand);
+
+  --theme-placeholder: var(--theme-text-muted);
+}
+
+/* =========================================================
+ * TAILWIND THEME CONTRACT
+ *
+ * Tailwind utilities are mapped to the semantic tokens above.
+ *
+ * Example:
+ *
+ *   bg-background
+ *   text-text-primary
+ *   border-border
+ *   bg-brand
+ *   text-match
+ *
+ * Components therefore remain independent from the primitive
+ * color palette.
+ * ========================================================= */
+
+@theme {
+  /* ---------------------------------------------------------
+   * COLORS — SURFACES
+   * --------------------------------------------------------- */
+
+  --color-background: var(--theme-background);
+  --color-surface: var(--theme-surface);
+  --color-surface-subtle: var(--theme-surface-subtle);
+  --color-surface-raised: var(--theme-surface-raised);
+  --color-surface-overlay: var(--theme-surface-overlay);
+
+  /* ---------------------------------------------------------
+   * COLORS — TEXT
+   * --------------------------------------------------------- */
+
+  --color-text-primary: var(--theme-text-primary);
+  --color-text-secondary: var(--theme-text-secondary);
+  --color-text-muted: var(--theme-text-muted);
+  --color-text-disabled: var(--theme-text-disabled);
+  --color-text-inverse: var(--theme-text-inverse);
+
+  /* ---------------------------------------------------------
+   * COLORS — BORDERS
+   * --------------------------------------------------------- */
+
+  --color-border: var(--theme-border);
+  --color-border-strong: var(--theme-border-strong);
+  --color-border-subtle: var(--theme-border-subtle);
+
+  /* ---------------------------------------------------------
+   * COLORS — BRAND
+   * --------------------------------------------------------- */
+
+  --color-brand: var(--theme-brand);
+  --color-brand-hover: var(--theme-brand-hover);
+  --color-brand-active: var(--theme-brand-active);
+  --color-brand-tint: var(--theme-brand-tint);
+  --color-brand-subtle: var(--theme-brand-subtle);
+
+  /* ---------------------------------------------------------
+   * COLORS — STATUS
+   * --------------------------------------------------------- */
+
+  --color-success: var(--theme-success);
+  --color-success-hover: var(--theme-success-hover);
+  --color-success-active: var(--theme-success-active);
+  --color-success-tint: var(--theme-success-tint);
+  --color-success-subtle: var(--theme-success-subtle);
+
+  --color-warning: var(--theme-warning);
+  --color-warning-hover: var(--theme-warning-hover);
+  --color-warning-active: var(--theme-warning-active);
+  --color-warning-tint: var(--theme-warning-tint);
+  --color-warning-subtle: var(--theme-warning-subtle);
+
+  --color-danger: var(--theme-danger);
+  --color-danger-hover: var(--theme-danger-hover);
+  --color-danger-active: var(--theme-danger-active);
+  --color-danger-tint: var(--theme-danger-tint);
+  --color-danger-subtle: var(--theme-danger-subtle);
+
+  --color-info: var(--theme-info);
+  --color-info-hover: var(--theme-info-hover);
+  --color-info-active: var(--theme-info-active);
+  --color-info-tint: var(--theme-info-tint);
+  --color-info-subtle: var(--theme-info-subtle);
+
+  /* ---------------------------------------------------------
+   * COLORS — ANALYSIS
+   * --------------------------------------------------------- */
+
+  --color-match: var(--theme-match);
+  --color-match-hover: var(--theme-match-hover);
+  --color-match-tint: var(--theme-match-tint);
+  --color-match-subtle: var(--theme-match-subtle);
+
+  --color-partial: var(--theme-partial);
+  --color-partial-hover: var(--theme-partial-hover);
+  --color-partial-tint: var(--theme-partial-tint);
+  --color-partial-subtle: var(--theme-partial-subtle);
+
+  --color-mismatch: var(--theme-mismatch);
+  --color-mismatch-hover: var(--theme-mismatch-hover);
+  --color-mismatch-tint: var(--theme-mismatch-tint);
+  --color-mismatch-subtle: var(--theme-mismatch-subtle);
+
+  --color-processing: var(--theme-processing);
+  --color-processing-hover: var(--theme-processing-hover);
+  --color-processing-tint: var(--theme-processing-tint);
+  --color-processing-subtle: var(--theme-processing-subtle);
+
+  --color-analysis-neutral: var(--theme-analysis-neutral);
+  --color-analysis-neutral-tint: var(--theme-analysis-neutral-tint);
+
+  /* ---------------------------------------------------------
+   * FORM / INTERACTION
+   * --------------------------------------------------------- */
+
+  --color-input: var(--theme-input);
+  --color-input-hover: var(--theme-input-hover);
+  --color-ring: var(--theme-ring);
+  --color-placeholder: var(--theme-placeholder);
+
+  /* =========================================================
+   * TYPOGRAPHY
+   *
+   * The primitive typography tokens remain the source values.
+   * Tailwind receives them under its own namespace.
+   * ========================================================= */
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* ---------------------------------------------------------
+   * Font sizes
+   * --------------------------------------------------------- */
+
+  --text-xs: var(--text-xs);
+  --text-sm: var(--text-sm);
+  --text-base: var(--text-base);
+  --text-lg: var(--text-lg);
+  --text-xl: var(--text-xl);
+  --text-2xl: var(--text-2xl);
+  --text-3xl: var(--text-3xl);
+  --text-4xl: var(--text-4xl);
+  --text-5xl: var(--text-5xl);
+
+  /* ---------------------------------------------------------
+   * Spacing
+   * --------------------------------------------------------- */
+
+  --spacing-0: var(--space-0);
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-8: var(--space-8);
+  --spacing-10: var(--space-10);
+  --spacing-12: var(--space-12);
+  --spacing-16: var(--space-16);
+  --spacing-20: var(--space-20);
+  --spacing-24: var(--space-24);
+
+  /* ---------------------------------------------------------
+   * Radius
+   * --------------------------------------------------------- */
+
+  --radius-none: var(--radius-none);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-full: var(--radius-full);
+
+  /* ---------------------------------------------------------
+   * Shadows
+   * --------------------------------------------------------- */
+
+  --shadow-none: var(--shadow-none);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+
+  /* ---------------------------------------------------------
+   * Motion
+   * --------------------------------------------------------- */
+
+  --duration-instant: var(--duration-instant);
+  --duration-fast: var(--duration-fast);
+  --duration-normal: var(--duration-normal);
+  --duration-moderate: var(--duration-moderate);
+  --duration-slow: var(--duration-slow);
+
+  /* ---------------------------------------------------------
+   * Z-index
+   * --------------------------------------------------------- */
+
+  --z-index-base: var(--z-base);
+  --z-index-dropdown: var(--z-dropdown);
+  --z-index-sticky: var(--z-sticky);
+  --z-index-overlay: var(--z-overlay);
+  --z-index-modal: var(--z-modal);
+  --z-index-popover: var(--z-popover);
+  --z-index-toast: var(--z-toast);
+  --z-index-tooltip: var(--z-tooltip);
+
+  /* =========================================================
+   * SHADCN/UI COMPATIBILITY
+   * ========================================================= */
+
+  --color-foreground: var(--theme-text-primary);
+
+  --color-primary: var(--theme-brand);
+  --color-primary-foreground: var(--theme-text-inverse);
+
+  --color-secondary: var(--theme-brand-tint);
+  --color-secondary-foreground: var(--theme-text-primary);
+
+  --color-muted: var(--theme-surface-subtle);
+  --color-muted-foreground: var(--theme-text-secondary);
+
+  --color-accent: var(--theme-brand-tint);
+  --color-accent-foreground: var(--theme-text-primary);
+
+  --color-destructive: var(--theme-danger);
+  --color-destructive-foreground: var(--theme-text-inverse);
+
+  --color-card: var(--theme-surface);
+  --color-card-foreground: var(--theme-text-primary);
+
+  --color-popover: var(--theme-surface-overlay);
+  --color-popover-foreground: var(--theme-text-primary);
+}
+
+/* =========================================================
+ * DARK THEME
+ *
+ * Only semantic tokens change here.
+ * Components do not need to know how dark mode is achieved.
+ * ========================================================= */
+
+.dark {
+  /* ---------------------------------------------------------
+   * Surfaces
+   * --------------------------------------------------------- */
+
+  --theme-background: var(--neutral-950);
+  --theme-surface: var(--neutral-900);
+  --theme-surface-subtle: var(--neutral-900);
+  --theme-surface-raised: var(--neutral-800);
+  --theme-surface-overlay: var(--neutral-800);
+
+  /* ---------------------------------------------------------
+   * Text
+   * --------------------------------------------------------- */
+
+  --theme-text-primary: var(--neutral-50);
+  --theme-text-secondary: var(--neutral-300);
+  --theme-text-muted: var(--neutral-400);
+  --theme-text-disabled: var(--neutral-600);
+  --theme-text-inverse: var(--neutral-900);
+
+  /* ---------------------------------------------------------
+   * Borders
+   * --------------------------------------------------------- */
+
+  --theme-border: var(--neutral-700);
+  --theme-border-strong: var(--neutral-600);
+  --theme-border-subtle: var(--neutral-800);
+
+  /* ---------------------------------------------------------
+   * Brand
+   * --------------------------------------------------------- */
+
+  --theme-brand: var(--brand-400);
+  --theme-brand-hover: var(--brand-300);
+  --theme-brand-active: var(--brand-200);
+  --theme-brand-tint: var(--brand-900);
+  --theme-brand-subtle: var(--brand-800);
+
+  /* ---------------------------------------------------------
+   * Status
+   * --------------------------------------------------------- */
+
+  --theme-success: var(--success-500);
+  --theme-success-hover: var(--success-400);
+  --theme-success-active: var(--success-300);
+  --theme-success-tint: var(--success-900);
+  --theme-success-subtle: var(--success-800);
+
+  --theme-warning: var(--warning-500);
+  --theme-warning-hover: var(--warning-400);
+  --theme-warning-active: var(--warning-300);
+  --theme-warning-tint: var(--warning-900);
+  --theme-warning-subtle: var(--warning-800);
+
+  --theme-danger: var(--danger-500);
+  --theme-danger-hover: var(--danger-400);
+  --theme-danger-active: var(--danger-300);
+  --theme-danger-tint: var(--danger-900);
+  --theme-danger-subtle: var(--danger-800);
+
+  --theme-info: var(--info-500);
+  --theme-info-hover: var(--info-400);
+  --theme-info-active: var(--info-300);
+  --theme-info-tint: var(--info-900);
+  --theme-info-subtle: var(--info-800);
+
+  /* ---------------------------------------------------------
+   * Analysis
+   * --------------------------------------------------------- */
+
+  --theme-match: var(--success-500);
+  --theme-match-hover: var(--success-400);
+  --theme-match-tint: var(--success-900);
+  --theme-match-subtle: var(--success-800);
+
+  --theme-partial: var(--warning-500);
+  --theme-partial-hover: var(--warning-400);
+  --theme-partial-tint: var(--warning-900);
+  --theme-partial-subtle: var(--warning-800);
+
+  --theme-mismatch: var(--danger-500);
+  --theme-mismatch-hover: var(--danger-400);
+  --theme-mismatch-tint: var(--danger-900);
+  --theme-mismatch-subtle: var(--danger-800);
+
+  --theme-processing: var(--info-500);
+  --theme-processing-hover: var(--info-400);
+  --theme-processing-tint: var(--info-900);
+  --theme-processing-subtle: var(--info-800);
+
+  --theme-analysis-neutral: var(--neutral-400);
+  --theme-analysis-neutral-tint: var(--neutral-800);
+
+  /* ---------------------------------------------------------
+   * Form / interaction
+   * --------------------------------------------------------- */
+
+  --theme-input: var(--theme-border);
+  --theme-input-hover: var(--theme-border-strong);
+  --theme-ring: var(--theme-brand);
+  --theme-placeholder: var(--theme-text-muted);
+}
+
+/* =========================================================
+ * GLOBAL TOKEN APPLICATION
+ *
+ * Only application-wide rules belong here.
+ * Component-specific styling belongs in components/modules.
+ * ========================================================= */
+
+@layer base {
+  * {
+    border-color: var(--theme-border);
+  }
+
+  body {
+    color: var(--theme-text-primary);
+    background-color: var(--theme-background);
+  }
+}

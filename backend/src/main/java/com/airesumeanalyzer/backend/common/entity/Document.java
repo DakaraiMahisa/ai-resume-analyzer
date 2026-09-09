@@ -28,6 +28,12 @@ public abstract class Document extends BaseEntity {
     private String rawText;
 
     @Column(
+            name = "structured_data",
+            columnDefinition = "JSON"
+    )
+    private String structuredData;
+
+    @Column(
             nullable = false,
             length = 64
     )

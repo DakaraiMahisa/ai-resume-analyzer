@@ -48,7 +48,6 @@ public class AuthService {
         String email = request.email()
                 .trim()
                 .toLowerCase(Locale.ROOT);
-
         Authentication authentication =
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(

@@ -17,6 +17,7 @@ public class PathsConfig {
                 "/api/v1/auth/login/public",
                 "/api/v1/auth/refresh/public",
                 "/api/v1/auth/logout/public",
+                "/api/v1/ai/**",
                 "/api/swagger-ui.html",
                 "/swagger-ui/**",
                 "/api/v3/api-docs/**",
@@ -29,7 +30,12 @@ public class PathsConfig {
     @Bean(name = "securedPaths")
     public List<String> securedPaths() {
         return List.of(
-                "/api/v1/resumes/**"
+                "/api/v1/resumes/**",
+                "/api/v1/processing/**",
+                "/api/v1/job-descriptions/**",
+                "/api/v1/matching/**",
+                "/api/v1/analysis/**"
+
         );
     }
 
