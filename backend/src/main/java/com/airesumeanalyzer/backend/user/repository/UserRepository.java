@@ -1,6 +1,6 @@
-package com.airesumeanalyzer.backend.auth.repository;
+package com.airesumeanalyzer.backend.user.repository;
 
-import com.airesumeanalyzer.backend.auth.entity.User;
+import com.airesumeanalyzer.backend.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

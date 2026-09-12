@@ -1,7 +1,7 @@
 package com.airesumeanalyzer.backend.auth.security;
 
-import com.airesumeanalyzer.backend.auth.entity.User;
-import com.airesumeanalyzer.backend.auth.repository.UserRepository;
+import com.airesumeanalyzer.backend.user.entity.User;
+import com.airesumeanalyzer.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

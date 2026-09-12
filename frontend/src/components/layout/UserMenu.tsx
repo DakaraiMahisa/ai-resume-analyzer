@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useLogout } from "@/modules/auth";
+import { useCurrentUser } from "@/modules/user";
 
 export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
+
   const navigate = useNavigate();
 
   const logoutMutation = useLogout();
+  const { data: currentUser, isLoading } = useCurrentUser();
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -16,6 +19,14 @@ export function UserMenu() {
       },
     });
   };
+
+  const initials = currentUser
+    ? `${currentUser.firstName.charAt(0)}${currentUser.lastName.charAt(0)}`
+    : "";
+
+  const displayName = currentUser
+    ? `${currentUser.firstName} ${currentUser.lastName}`
+    : "Account";
 
   return (
     <div className="relative">
@@ -32,13 +43,15 @@ export function UserMenu() {
           "focus-visible:ring-2 focus-visible:ring-brand/30",
         ].join(" ")}
       >
-        <span className="hidden text-sm font-medium sm:inline">Account</span>
+        <span className="hidden text-sm font-medium sm:inline">
+          {isLoading ? "Account" : displayName}
+        </span>
 
         <span
           aria-hidden="true"
           className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-xs font-semibold text-text-secondary"
         >
-          A
+          {isLoading ? "…" : initials}
         </span>
 
         <svg
@@ -61,14 +74,18 @@ export function UserMenu() {
       {isOpen && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-50 mt-2 w-52 rounded-lg border border-border bg-surface p-1 shadow-lg"
+          className="absolute right-0 top-full z-50 mt-2 w-64 rounded-lg border border-border bg-surface p-1 shadow-lg"
         >
           <div className="px-3 py-2.5">
-            <p className="text-sm font-medium text-text-primary">Account</p>
-
-            <p className="mt-0.5 text-xs text-text-tertiary">
-              Manage your workspace
+            <p className="text-sm font-medium text-text-primary">
+              {displayName}
             </p>
+
+            {currentUser && (
+              <p className="mt-0.5 truncate text-xs text-text-tertiary">
+                {currentUser.email}
+              </p>
+            )}
           </div>
 
           <div className="my-1 h-px bg-border" />

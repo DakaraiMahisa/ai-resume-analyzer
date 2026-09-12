@@ -1,6 +1,6 @@
 package com.airesumeanalyzer.backend.common.entity;
 
-import com.airesumeanalyzer.backend.auth.entity.User;
+import com.airesumeanalyzer.backend.user.entity.User;
 import com.airesumeanalyzer.backend.common.enums.DocumentProcessingStatus;
 import jakarta.persistence.*;
 import lombok.*;

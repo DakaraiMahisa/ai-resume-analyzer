@@ -1,7 +1,7 @@
 package com.airesumeanalyzer.backend.jobdescription.service;
 
-import com.airesumeanalyzer.backend.auth.entity.User;
-import com.airesumeanalyzer.backend.auth.repository.UserRepository;
+import com.airesumeanalyzer.backend.user.entity.User;
+import com.airesumeanalyzer.backend.user.repository.UserRepository;
 import com.airesumeanalyzer.backend.common.enums.DocumentProcessingStatus;
 import com.airesumeanalyzer.backend.common.exception.base.BadRequestException;
 import com.airesumeanalyzer.backend.common.exception.base.ConflictException;
@@ -15,6 +15,7 @@ import com.airesumeanalyzer.backend.jobdescription.dto.response.JobDescriptionSu
 import com.airesumeanalyzer.backend.jobdescription.dto.response.JobDescriptionUploadResponse;
 import com.airesumeanalyzer.backend.jobdescription.entity.JobDescription;
 import com.airesumeanalyzer.backend.jobdescription.repository.JobDescriptionRepository;
+import com.airesumeanalyzer.backend.processing.entity.ProcessingJob;
 import com.airesumeanalyzer.backend.processing.enums.DocumentType;
 import com.airesumeanalyzer.backend.processing.service.ProcessingJobService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -45,6 +47,9 @@ public class JobDescriptionServiceImpl implements JobDescriptionService {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "text/plain"
     );
+
+
+
 
 
     @Override
@@ -108,15 +113,17 @@ public class JobDescriptionServiceImpl implements JobDescriptionService {
         jobDescription.setStoragePath(storagePath);
 
         JobDescription savedJobDescription;
+        ProcessingJob processingJob;
 
         try {
             savedJobDescription =
                     jobDescriptionRepository.saveAndFlush(jobDescription);
 
-            processingJobService.createJob(
-                    DocumentType.JOB_DESCRIPTION,
-                    savedJobDescription.getId()
-            );
+            processingJob =
+                    processingJobService.createJob(
+                            DocumentType.JOB_DESCRIPTION,
+                            savedJobDescription.getId()
+                    );
 
         } catch (DataAccessException exception) {
 
@@ -131,10 +138,12 @@ public class JobDescriptionServiceImpl implements JobDescriptionService {
 
         return new JobDescriptionUploadResponse(
                 savedJobDescription.getId(),
+                processingJob.getId(),
                 savedJobDescription.getProcessingStatus(),
                 savedJobDescription.getCreatedAt()
         );
     }
+
 
 
     @Override
@@ -161,15 +170,23 @@ public class JobDescriptionServiceImpl implements JobDescriptionService {
         );
     }
 
+
     @Override
     @Transactional
     public JobDescriptionUploadResponse createFromText(
             UUID userId,
             JobDescriptionTextRequest request
     ) {
-        if (request.content() == null || request.content().isBlank()) {
-            throw new BadRequestException(
-                    "Job description content must not be empty."
+        String content = request.content().trim();
+
+        String checksum = ChecksumUtils.sha256(content.getBytes(StandardCharsets.UTF_8));
+
+        Optional<JobDescription> existingJobDescription =
+                jobDescriptionRepository.findByChecksum(checksum);
+
+        if (existingJobDescription.isPresent()) {
+            throw new ConflictException(
+                    "This job description has already been added."
             );
         }
 
@@ -182,19 +199,29 @@ public class JobDescriptionServiceImpl implements JobDescriptionService {
                 .owner(owner)
                 .originalFilename(null)
                 .storagePath(null)
-                .rawText(request.content())
-                .processingStatus(DocumentProcessingStatus.COMPLETED)
+                .rawText(content)
+                .checksum(checksum)
+                .processingStatus(DocumentProcessingStatus.UPLOADED)
                 .build();
 
         JobDescription savedJobDescription =
                 jobDescriptionRepository.saveAndFlush(jobDescription);
 
+        ProcessingJob processingJob =
+                processingJobService.createJob(
+                        DocumentType.JOB_DESCRIPTION,
+                        savedJobDescription.getId()
+                );
+
         return new JobDescriptionUploadResponse(
                 savedJobDescription.getId(),
+                processingJob.getId(),
                 savedJobDescription.getProcessingStatus(),
                 savedJobDescription.getCreatedAt()
         );
     }
+
+
 
     @Override
     @Transactional(readOnly = true)

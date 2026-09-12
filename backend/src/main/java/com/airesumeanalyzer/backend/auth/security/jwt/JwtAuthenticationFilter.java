@@ -1,8 +1,8 @@
 package com.airesumeanalyzer.backend.auth.security.jwt;
 
 
-import com.airesumeanalyzer.backend.auth.entity.User;
-import com.airesumeanalyzer.backend.auth.repository.UserRepository;
+import com.airesumeanalyzer.backend.user.entity.User;
+import com.airesumeanalyzer.backend.user.repository.UserRepository;
 import com.airesumeanalyzer.backend.auth.security.CurrentUserPrincipal;
 import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundException;
 import jakarta.servlet.FilterChain;

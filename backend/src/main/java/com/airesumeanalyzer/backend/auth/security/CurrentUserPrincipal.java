@@ -1,7 +1,7 @@
 package com.airesumeanalyzer.backend.auth.security;
 
 import com.airesumeanalyzer.backend.auth.enums.Role;
-import com.airesumeanalyzer.backend.auth.entity.User;
+import com.airesumeanalyzer.backend.user.entity.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

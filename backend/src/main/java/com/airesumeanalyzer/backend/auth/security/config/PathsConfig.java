@@ -34,7 +34,8 @@ public class PathsConfig {
                 "/api/v1/processing/**",
                 "/api/v1/job-descriptions/**",
                 "/api/v1/matching/**",
-                "/api/v1/analysis/**"
+                "/api/v1/analysis/**",
+                "/api/v1/users/**"
 
         );
     }
