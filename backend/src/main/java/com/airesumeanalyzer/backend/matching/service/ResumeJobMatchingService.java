@@ -7,7 +7,6 @@ import com.airesumeanalyzer.backend.ai.model.claims.ClaimPriority;
 import com.airesumeanalyzer.backend.ai.model.understanding.StructuredJobDescription;
 import com.airesumeanalyzer.backend.jobdescription.entity.JobDescription;
 import com.airesumeanalyzer.backend.jobdescription.repository.JobDescriptionRepository;
-import com.airesumeanalyzer.backend.rie.domain.RequirementEvaluation;
 import com.airesumeanalyzer.backend.rie.domain.RequirementMatchResult;
 import com.airesumeanalyzer.backend.rie.domain.RequirementToEvaluate;
 import com.airesumeanalyzer.backend.rie.service.RequirementMatchingService;

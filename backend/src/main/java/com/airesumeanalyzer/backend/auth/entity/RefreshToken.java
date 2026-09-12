@@ -1,6 +1,7 @@
 package com.airesumeanalyzer.backend.auth.entity;
 
 import com.airesumeanalyzer.backend.common.entity.BaseEntity;
+import com.airesumeanalyzer.backend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
