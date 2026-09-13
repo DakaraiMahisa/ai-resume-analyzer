@@ -1,4 +1,4 @@
-package com.airesumeanalyzer.backend.auth.entity;
+package com.airesumeanalyzer.backend.user.entity;
 
 
 import com.airesumeanalyzer.backend.auth.enums.Role;

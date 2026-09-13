@@ -1,7 +1,7 @@
 package com.airesumeanalyzer.backend.resume.service;
 
-import com.airesumeanalyzer.backend.auth.entity.User;
-import com.airesumeanalyzer.backend.auth.repository.UserRepository;
+import com.airesumeanalyzer.backend.user.entity.User;
+import com.airesumeanalyzer.backend.user.repository.UserRepository;
 import com.airesumeanalyzer.backend.common.enums.DocumentProcessingStatus;
 import com.airesumeanalyzer.backend.common.exception.base.BadRequestException;
 import com.airesumeanalyzer.backend.common.exception.base.ConflictException;
@@ -9,6 +9,7 @@ import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundExcept
 import com.airesumeanalyzer.backend.common.exception.base.StorageException;
 import com.airesumeanalyzer.backend.common.storage.DocumentStorage;
 import com.airesumeanalyzer.backend.common.util.ChecksumUtils;
+import com.airesumeanalyzer.backend.processing.entity.ProcessingJob;
 import com.airesumeanalyzer.backend.processing.enums.DocumentType;
 import com.airesumeanalyzer.backend.processing.service.ProcessingJobService;
 import com.airesumeanalyzer.backend.resume.dto.response.ResumeDetailResponse;
@@ -97,11 +98,11 @@ public class ResumeService {
         resume.setStoragePath(storagePath);
 
         Resume savedResume;
-
+        ProcessingJob processingJob;
         try {
             savedResume = resumeRepository.saveAndFlush(resume);
 
-            processingJobService.createJob(
+            processingJob = processingJobService.createJob(
                     DocumentType.RESUME,
                     savedResume.getId()
             );
@@ -116,7 +117,7 @@ public class ResumeService {
             throw exception;
         }
 
-        return toUploadResponse(savedResume);
+        return toUploadResponse(savedResume,processingJob);
     }
 
     @Transactional(readOnly = true)
@@ -180,13 +181,20 @@ public class ResumeService {
         );
     }
 
-    private ResumeUploadResponse toUploadResponse(Resume resume) {
+
+    private ResumeUploadResponse toUploadResponse(
+            Resume resume,
+            ProcessingJob processingJob
+    ) {
         return new ResumeUploadResponse(
                 resume.getId(),
+                processingJob.getId(),
                 resume.getProcessingStatus(),
                 resume.getCreatedAt()
         );
     }
+
+
 
     private void validateFile(MultipartFile file) {
 

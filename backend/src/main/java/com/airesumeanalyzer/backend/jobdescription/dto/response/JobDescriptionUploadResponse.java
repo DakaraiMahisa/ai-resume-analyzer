@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record JobDescriptionUploadResponse(
         UUID jobDescriptionId,
+        UUID processingJobId,
         DocumentProcessingStatus status,
         Instant uploadedAt
 ) {

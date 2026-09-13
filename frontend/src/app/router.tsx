@@ -8,7 +8,15 @@ import { LoginPage } from "@/modules/auth/pages/LoginPage";
 import { DashboardPage } from "@/modules/dashboard/pages/DashboardPage";
 import { LandingPage } from "@/modules/landing/pages/LandingPage";
 import { RegisterPage } from "@/modules/auth/pages/RegisterPage";
+import { ResumesPage } from "@/modules/resume/pages/ResumesPage";
 
+import { ResumeDetailPage } from "@/modules/resume/pages/ResumeDetailPage";
+import { JobDescriptionDetailPage, JobDescriptionsPage } from "@/modules/job";
+import {
+  AnalyzePage,
+  AnalysisResultPage,
+  AnalysesPage,
+} from "@/modules/analysis";
 export const router = createBrowserRouter([
   {
     errorElement: (
@@ -50,17 +58,27 @@ export const router = createBrowserRouter([
                 path: "dashboard",
                 element: <DashboardPage />,
               },
-              {
-                path: "resumes",
-                element: <div>Resumes</div>,
-              },
+              { path: "resumes", element: <ResumesPage /> },
+              { path: "resumes/:id", element: <ResumeDetailPage /> },
               {
                 path: "jobs",
-                element: <div>Jobs</div>,
+                element: <JobDescriptionsPage />,
+              },
+              {
+                path: "jobs/:id",
+                element: <JobDescriptionDetailPage />,
+              },
+              {
+                path: "analyze",
+                element: <AnalyzePage />,
               },
               {
                 path: "analyses",
-                element: <div>Analyses</div>,
+                element: <AnalysesPage />,
+              },
+              {
+                path: "analyses/:analysisId",
+                element: <AnalysisResultPage />,
               },
               {
                 path: "settings",

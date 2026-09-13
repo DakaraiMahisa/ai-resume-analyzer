@@ -1,11 +1,17 @@
 package com.airesumeanalyzer.backend.analysis.service;
 
+import com.airesumeanalyzer.backend.analysis.entity.Analysis;
 import com.airesumeanalyzer.backend.analysis.model.ResumeAnalysisResponse;
 import com.airesumeanalyzer.backend.ats.domain.model.ATSResult;
 import com.airesumeanalyzer.backend.ats.service.ATSScoringService;
+import com.airesumeanalyzer.backend.jobdescription.dto.JobDescriptionContext;
+import com.airesumeanalyzer.backend.jobdescription.entity.JobDescription;
+import com.airesumeanalyzer.backend.jobdescription.repository.JobDescriptionRepository;
 import com.airesumeanalyzer.backend.matching.service.ResumeJobMatchingService;
 import com.airesumeanalyzer.backend.recommendation.model.RecommendationResponse;
 import com.airesumeanalyzer.backend.recommendation.service.RecommendationService;
+import com.airesumeanalyzer.backend.resume.entity.Resume;
+import com.airesumeanalyzer.backend.resume.repository.ResumeRepository;
 import com.airesumeanalyzer.backend.rie.domain.RequirementMatchResult;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +30,13 @@ public class ResumeAnalysisService {
     private final ATSScoringService atsScoringService;
     private final RecommendationService recommendationService;
 
-    @Transactional(readOnly = true)
+    private final AnalysisPersistenceService analysisPersistenceService;
+    private final AnalysisResultSerializer analysisResultSerializer;
+
+    private final ResumeRepository resumeRepository;
+    private final JobDescriptionRepository jobDescriptionRepository;
+
+    @Transactional
     public ResumeAnalysisResponse analyze(
             UUID resumeId,
             UUID jobDescriptionId
@@ -40,25 +52,85 @@ public class ResumeAnalysisService {
                 "jobDescriptionId must not be null"
         );
 
-        List<RequirementMatchResult> requirementResults =
-                resumeJobMatchingService.match(
-                        resumeId,
-                        jobDescriptionId
+        Resume resume = resumeRepository.findById(resumeId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Resume not found: " + resumeId
+                        )
                 );
 
-        ATSResult atsResult =
-                atsScoringService.score(
-                        requirementResults
+        JobDescription jobDescription =
+                jobDescriptionRepository.findById(jobDescriptionId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Job description not found: "
+                                                + jobDescriptionId
+                                )
+                        );
+
+        String jobDescriptionDisplayName =
+                jobDescription.getOriginalFilename() != null
+                        ? jobDescription.getOriginalFilename()
+                        : "Pasted job description";
+
+        Analysis analysis =
+                analysisPersistenceService.createRunning(
+                        resume,
+                        jobDescription
                 );
 
-        RecommendationResponse recommendation =
-                recommendationService.recommend(
-                        atsResult
-                );
+        try {
 
-        return new ResumeAnalysisResponse(
-                atsResult,
-                recommendation
-        );
+            List<RequirementMatchResult> requirementResults =
+                    resumeJobMatchingService.match(
+                            resumeId,
+                            jobDescriptionId
+                    );
+
+            ATSResult atsResult =
+                    atsScoringService.score(
+                            requirementResults
+                    );
+
+            RecommendationResponse recommendation =
+                    recommendationService.recommend(
+                            atsResult
+                    );
+
+            ResumeAnalysisResponse response =
+                    new ResumeAnalysisResponse(
+                            analysis.getId(),
+                            resumeId,
+                            new JobDescriptionContext(
+                                    jobDescription.getId(),
+                                    jobDescriptionDisplayName
+                            ),
+                            requirementResults,
+                            atsResult,
+                            recommendation
+                    );
+
+            String resultData =
+                    analysisResultSerializer.serialize(response);
+
+            analysisPersistenceService.markCompleted(
+                    analysis.getId(),
+                    atsResult.overallScore(),
+                    atsResult.required().score(),
+                    atsResult.preferred().score(),
+                    resultData
+            );
+
+            return response;
+
+        } catch (Exception exception) {
+
+            analysisPersistenceService.markFailed(
+                    analysis.getId(),
+                    exception.getMessage()
+            );
+
+            throw exception;
+        }
     }
 }

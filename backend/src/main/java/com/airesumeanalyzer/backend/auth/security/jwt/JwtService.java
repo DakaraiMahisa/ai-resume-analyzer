@@ -1,6 +1,5 @@
 package com.airesumeanalyzer.backend.auth.security.jwt;
 
-import com.airesumeanalyzer.backend.auth.repository.UserRepository;
 import com.airesumeanalyzer.backend.auth.security.CurrentUserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
