@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Button, Card, Input } from "@/components/ui";
 import {
   useCreateJobDescriptionFromText,
+  useProcessJobDescription,
   useUploadJobDescription,
 } from "@/modules/job";
 
@@ -23,8 +24,12 @@ export function JobDescriptionInput({ onCreated }: JobDescriptionInputProps) {
 
   const uploadMutation = useUploadJobDescription();
   const textMutation = useCreateJobDescriptionFromText();
+  const processMutation = useProcessJobDescription();
 
-  const isSubmitting = uploadMutation.isPending || textMutation.isPending;
+  const isSubmitting =
+    uploadMutation.isPending ||
+    textMutation.isPending ||
+    processMutation.isPending;
 
   const resetFileInput = () => {
     if (fileInputRef.current) {
@@ -41,6 +46,7 @@ export function JobDescriptionInput({ onCreated }: JobDescriptionInputProps) {
 
     uploadMutation.reset();
     textMutation.reset();
+    processMutation.reset();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +74,18 @@ export function JobDescriptionInput({ onCreated }: JobDescriptionInputProps) {
     try {
       const result = await uploadMutation.mutateAsync(selectedFile);
 
+      try {
+        await processMutation.mutateAsync({
+          processingJobId: result.processingJobId,
+          jobDescriptionId: result.jobDescriptionId,
+        });
+      } catch {
+        setError(
+          "The job description was uploaded, but processing failed. Please try again.",
+        );
+        return;
+      }
+
       setSelectedFile(null);
       resetFileInput();
 
@@ -92,6 +110,18 @@ export function JobDescriptionInput({ onCreated }: JobDescriptionInputProps) {
         title: title.trim() || undefined,
         content: trimmedContent,
       });
+
+      try {
+        await processMutation.mutateAsync({
+          processingJobId: result.processingJobId,
+          jobDescriptionId: result.jobDescriptionId,
+        });
+      } catch {
+        setError(
+          "The job description was added, but processing failed. Please try again.",
+        );
+        return;
+      }
 
       setTitle("");
       setContent("");
@@ -192,7 +222,7 @@ export function JobDescriptionInput({ onCreated }: JobDescriptionInputProps) {
             <Button
               type="button"
               onClick={() => void handleUpload()}
-              loading={uploadMutation.isPending}
+              loading={isSubmitting}
               disabled={!selectedFile || isSubmitting}
             >
               Add job description
@@ -228,7 +258,7 @@ export function JobDescriptionInput({ onCreated }: JobDescriptionInputProps) {
             <Button
               type="button"
               onClick={() => void handleCreateFromText()}
-              loading={textMutation.isPending}
+              loading={isSubmitting}
               disabled={!content.trim() || isSubmitting}
             >
               Add job description

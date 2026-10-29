@@ -4,16 +4,27 @@ import com.airesumeanalyzer.backend.ai.model.understanding.StructuredResume;
 import com.airesumeanalyzer.backend.ai.provider.AiModelProvider;
 import com.airesumeanalyzer.backend.ai.service.ResumeUnderstandingService;
 import com.airesumeanalyzer.backend.common.exception.base.InvalidDocumentException;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
-@RequiredArgsConstructor
 public class ResumeUnderstandingServiceImpl
         implements ResumeUnderstandingService {
 
     private final AiModelProvider aiModelProvider;
 
+    public ResumeUnderstandingServiceImpl(
+            @Qualifier("geminiModelProvider")
+            AiModelProvider aiModelProvider
+    ) {
+        this.aiModelProvider =
+                Objects.requireNonNull(
+                        aiModelProvider,
+                        "aiModelProvider must not be null"
+                );
+    }
     @Override
     public StructuredResume understand(String rawText) {
 

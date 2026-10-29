@@ -4,6 +4,7 @@ export * from "@/modules/analysis/api/analysis.api";
 export * from "@/modules/analysis/hooks/use-analyze-resume";
 export * from "@/modules/analysis/types/analysis.types";
 export * from "@/modules/analysis/hooks/use-analysis";
+export * from "@/modules/analysis/hooks/use-analysis-mutations";
 export * from "@/modules/analysis/components/AnalysisHeader";
 export * from "@/modules/analysis/components/MatchOverview";
 export * from "@/modules/analysis/components/MatchSummary";

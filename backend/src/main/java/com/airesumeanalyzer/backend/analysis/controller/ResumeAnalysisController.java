@@ -2,7 +2,8 @@ package com.airesumeanalyzer.backend.analysis.controller;
 
 import com.airesumeanalyzer.backend.analysis.dto.AnalysisDashboardSummaryResponse;
 import com.airesumeanalyzer.backend.analysis.dto.AnalysisSummaryResponse;
-import com.airesumeanalyzer.backend.analysis.model.ResumeAnalysisResponse;
+import com.airesumeanalyzer.backend.analysis.dto.AnalysisStatusResponse;
+import com.airesumeanalyzer.backend.auth.security.CurrentUserPrincipal;
 import com.airesumeanalyzer.backend.analysis.service.AnalysisQueryService;
 import com.airesumeanalyzer.backend.analysis.service.ResumeAnalysisService;
 
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -32,32 +35,35 @@ public class ResumeAnalysisController {
     @PostMapping(
             "/resumes/{resumeId}/job-descriptions/{jobDescriptionId}/analyze"
     )
-    public ResponseEntity<ApiResponse<ResumeAnalysisResponse>> analyze(
+    public ResponseEntity<ApiResponse<AnalysisStatusResponse>> analyze(
+            @AuthenticationPrincipal CurrentUserPrincipal principal,
             @PathVariable UUID resumeId,
             @PathVariable UUID jobDescriptionId
     ) {
 
-        ResumeAnalysisResponse result =
-                resumeAnalysisService.analyze(
+        AnalysisStatusResponse result =
+                resumeAnalysisService.start(
+                        principal.getUserId(),
                         resumeId,
                         jobDescriptionId
                 );
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(
                 ApiResponse.success(
                         result,
-                        "Resume analysis completed successfully"
+                        "Resume analysis started"
                 )
         );
     }
 
     @GetMapping("/{analysisId}")
-    public ResponseEntity<ApiResponse<ResumeAnalysisResponse>> getById(
+    public ResponseEntity<ApiResponse<AnalysisStatusResponse>> getById(
+            @AuthenticationPrincipal CurrentUserPrincipal principal,
             @PathVariable UUID analysisId
     ) {
 
-        ResumeAnalysisResponse result =
-                analysisQueryService.getById(analysisId);
+        AnalysisStatusResponse result =
+                analysisQueryService.getById(principal.getUserId(), analysisId);
 
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -65,6 +71,33 @@ public class ResumeAnalysisController {
                         "Resume analysis retrieved successfully"
                 )
         );
+    }
+
+    @PostMapping("/{analysisId}/retry")
+    public ResponseEntity<ApiResponse<AnalysisStatusResponse>> retry(
+            @AuthenticationPrincipal CurrentUserPrincipal principal,
+            @PathVariable UUID analysisId
+    ) {
+        AnalysisStatusResponse result = resumeAnalysisService.retry(
+                principal.getUserId(),
+                analysisId
+        );
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(
+                ApiResponse.success(result, "Analysis retry started")
+        );
+    }
+
+    @DeleteMapping("/{analysisId}")
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal CurrentUserPrincipal principal,
+            @PathVariable UUID analysisId
+    ) {
+        resumeAnalysisService.delete(
+                principal.getUserId(),
+                analysisId
+        );
+
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping

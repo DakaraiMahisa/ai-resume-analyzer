@@ -11,6 +11,7 @@ import com.airesumeanalyzer.backend.rie.domain.RequirementMatchResult;
 import com.airesumeanalyzer.backend.rie.domain.RequirementToEvaluate;
 import com.airesumeanalyzer.backend.rie.service.RequirementMatchingService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ResumeJobMatchingService {
 
     private final ClaimRepository claimRepository;
@@ -56,6 +58,14 @@ public class ResumeJobMatchingService {
                         jobDescriptionId,
                         ClaimStatus.VALIDATED
                 );
+        log.info(
+                "Matching inputs loaded. resumeId={}, jobDescriptionId={}, "
+                        + "validatedResumeClaims={}, validatedRequirementClaims={}",
+                resumeId,
+                jobDescriptionId,
+                resumeClaims.size(),
+                requirementClaims.size()
+        );
 
         JobDescription jobDescription =
                 jobDescriptionRepository.findById(jobDescriptionId)
@@ -70,17 +80,41 @@ public class ResumeJobMatchingService {
                 deserializeStructuredData(
                         jobDescription.getStructuredData()
                 );
+        log.info(
+                "Structured job description loaded. jobDescriptionId={}, "
+                        + "requiredSkills={}, preferredSkills={}, "
+                        + "requiredExperience={}, preferredExperience={}, "
+                        + "requiredQualifications={}, "
+                        + "preferredQualifications={}",
+                jobDescriptionId,
+                sizeOf(structuredJobDescription.requiredSkills()),
+                sizeOf(structuredJobDescription.preferredSkills()),
+                sizeOf(structuredJobDescription.requiredExperience()),
+                sizeOf(structuredJobDescription.preferredExperience()),
+                sizeOf(structuredJobDescription.requiredQualifications()),
+                sizeOf(structuredJobDescription.preferredQualifications())
+        );
 
         List<RequirementToEvaluate> requirements =
                 extractRequirements(
                         structuredJobDescription
                 );
+        log.info(
+                "Requirements extracted for matching. jobDescriptionId={}, "
+                        + "requirementCount={}",
+                jobDescriptionId,
+                requirements.size()
+        );
 
         return requirementMatchingService.match(
                 requirements,
                 requirementClaims,
                 resumeClaims
         );
+    }
+
+    private int sizeOf(List<?> values) {
+        return values == null ? 0 : values.size();
     }
 
     private StructuredJobDescription deserializeStructuredData(
