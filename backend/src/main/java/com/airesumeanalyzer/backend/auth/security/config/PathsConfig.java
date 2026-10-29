@@ -18,6 +18,7 @@ public class PathsConfig {
                 "/api/v1/auth/refresh/public",
                 "/api/v1/auth/logout/public",
                 "/api/v1/ai/**",
+                "/actuator/**",
                 "/api/swagger-ui.html",
                 "/swagger-ui/**",
                 "/api/v3/api-docs/**",

@@ -1,7 +1,7 @@
 import type { ApiResponse, Pagination } from "@/core/api/api-response";
 import apiClient from "@/core/api/axios";
 import type {
-  ResumeAnalysisResponse,
+  AnalysisStatusResponse,
   AnalysisSummaryResponse,
   AnalysisDashboardSummaryResponse,
 } from "@/modules/analysis/types/analysis.types";
@@ -9,8 +9,8 @@ import type {
 export const analyzeResume = async (
   resumeId: string,
   jobDescriptionId: string,
-): Promise<ResumeAnalysisResponse> => {
-  const response = await apiClient.post<ApiResponse<ResumeAnalysisResponse>>(
+): Promise<AnalysisStatusResponse> => {
+  const response = await apiClient.post<ApiResponse<AnalysisStatusResponse>>(
     `/api/v1/analysis/resumes/${resumeId}/job-descriptions/${jobDescriptionId}/analyze`,
   );
 
@@ -23,18 +23,32 @@ export const analyzeResume = async (
 
 export const getAnalysis = async (
   analysisId: string,
-): Promise<ResumeAnalysisResponse> => {
-  const response = await apiClient.get<ApiResponse<ResumeAnalysisResponse>>(
+): Promise<AnalysisStatusResponse> => {
+  const response = await apiClient.get<ApiResponse<AnalysisStatusResponse>>(
     `/api/v1/analysis/${analysisId}`,
   );
 
   if (!response.data.data) {
-    throw new Error(
-      response.data.message ?? "Analysis result was not returned",
-    );
+    throw new Error(response.data.message ?? "Analysis status was not returned");
   }
 
   return response.data.data;
+};
+
+export const retryAnalysis = async (
+  analysisId: string,
+): Promise<AnalysisStatusResponse> => {
+  const response = await apiClient.post<ApiResponse<AnalysisStatusResponse>>(
+    `/api/v1/analysis/${analysisId}/retry`,
+  );
+  if (!response.data.data) {
+    throw new Error(response.data.message ?? "Analysis retry failed");
+  }
+  return response.data.data;
+};
+
+export const deleteAnalysis = async (analysisId: string): Promise<void> => {
+  await apiClient.delete(`/api/v1/analysis/${analysisId}`);
 };
 
 export const getAnalyses = async (

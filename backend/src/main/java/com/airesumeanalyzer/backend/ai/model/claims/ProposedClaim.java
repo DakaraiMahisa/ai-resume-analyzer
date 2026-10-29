@@ -14,6 +14,8 @@ public record ProposedClaim(
 
         String originalText,
 
+        List<String> evidenceSearchTerms,
+
         List<Evidence> evidence,
 
         UUID sourceDocumentId,

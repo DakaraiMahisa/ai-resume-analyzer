@@ -1,7 +1,9 @@
 package com.airesumeanalyzer.backend.analysis.service;
 
 import com.airesumeanalyzer.backend.analysis.dto.AnalysisDashboardSummaryResponse;
+import com.airesumeanalyzer.backend.analysis.dto.AnalysisErrorResponse;
 import com.airesumeanalyzer.backend.analysis.dto.AnalysisSummaryResponse;
+import com.airesumeanalyzer.backend.analysis.dto.AnalysisStatusResponse;
 import com.airesumeanalyzer.backend.analysis.entity.Analysis;
 import com.airesumeanalyzer.backend.analysis.enums.AnalysisStatus;
 import com.airesumeanalyzer.backend.analysis.model.ResumeAnalysisResponse;
@@ -24,35 +26,50 @@ public class AnalysisQueryService {
     private final AnalysisRepository analysisRepository;
     private final AnalysisResultSerializer analysisResultSerializer;
 
-    public ResumeAnalysisResponse getById(UUID analysisId) {
+    public AnalysisStatusResponse getById(UUID ownerId, UUID analysisId) {
 
         Objects.requireNonNull(
                 analysisId,
                 "analysisId must not be null"
         );
 
-        Analysis analysis = analysisRepository.findById(analysisId)
+        Analysis analysis = analysisRepository
+                .findByIdAndResumeOwnerId(analysisId, ownerId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Analysis not found: " + analysisId
                         )
                 );
 
-        if (analysis.getStatus() != AnalysisStatus.COMPLETED) {
-            throw new IllegalStateException(
-                    "Analysis is not completed: " + analysisId
+        return toStatusResponse(analysis);
+    }
+
+    public AnalysisStatusResponse toStatusResponse(Analysis analysis) {
+        ResumeAnalysisResponse result = null;
+        AnalysisErrorResponse error = null;
+        if (analysis.getStatus() == AnalysisStatus.COMPLETED
+                && analysis.getResultData() != null) {
+            result = analysisResultSerializer.deserialize(
+                    analysis.getResultData(),
+                    ResumeAnalysisResponse.class
+            );
+        } else if (analysis.getStatus() == AnalysisStatus.FAILED) {
+            error = new AnalysisErrorResponse(
+                    analysis.getFailureCode(),
+                    analysis.getErrorMessage(),
+                    analysis.isRetryable()
             );
         }
-
-        if (analysis.getResultData() == null) {
-            throw new IllegalStateException(
-                    "Analysis result is not available: " + analysisId
-            );
-        }
-
-        return analysisResultSerializer.deserialize(
-                analysis.getResultData(),
-                ResumeAnalysisResponse.class
+        return new AnalysisStatusResponse(
+                analysis.getId(),
+                analysis.getStatus(),
+                result,
+                error,
+                analysis.getCreatedAt(),
+                analysis.getStartedAt(),
+                analysis.getCompletedAt(),
+                analysis.getUpdatedAt(),
+                analysis.getAttemptNumber()
         );
     }
 

@@ -12,6 +12,8 @@ export const useAnalysis = (analysisId: string) => {
   return useQuery({
     queryKey: analysisQueryKeys.detail(analysisId),
     queryFn: () => getAnalysis(analysisId),
+    refetchInterval: (query) =>
+      query.state.data?.status === "RUNNING" ? 3000 : false,
     enabled: Boolean(analysisId),
   });
 };

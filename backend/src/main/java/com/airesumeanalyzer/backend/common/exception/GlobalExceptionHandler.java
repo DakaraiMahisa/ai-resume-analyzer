@@ -3,6 +3,7 @@ package com.airesumeanalyzer.backend.common.exception;
 import com.airesumeanalyzer.backend.common.api.ApiResponse;
 import com.airesumeanalyzer.backend.common.exception.base.*;
 import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
+import com.airesumeanalyzer.backend.analysis.exception.AnalysisQuotaExceededException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -25,6 +26,15 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AnalysisQuotaExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAnalysisQuota(
+            AnalysisQuotaExceededException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
                 .body(ApiResponse.error(ex.getMessage()));
     }
 

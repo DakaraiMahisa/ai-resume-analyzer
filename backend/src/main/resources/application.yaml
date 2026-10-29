@@ -18,6 +18,7 @@ spring:
         format_sql: true
         jdbc:
           time_zone: UTC
+
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -35,15 +36,33 @@ spring:
   output:
     ansi:
       enabled: ALWAYS
+
 ollama:
+  chat:
+    base-url: ${OLLAMA_CHAT_BASE_URL:http://localhost:11434}
+    model: ${OLLAMA_CHAT_MODEL:qwen2.5:3b}
+    read-timeout: ${OLLAMA_CHAT_READ_TIMEOUT:60s}
+
   embedding:
-    base-url: http://localhost:11434
-    model: qwen3-embedding:0.6b
+    base-url: ${OLLAMA_EMBEDDING_BASE_URL:http://localhost:11434}
+    model: ${OLLAMA_EMBEDDING_MODEL:qwen3-embedding:0.6b}
 
 server:
   port: 8080
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - metrics
 # Custom Security Config
 app:
+  analysis:
+    quota:
+      daily-limit: ${ANALYSIS_DAILY_LIMIT:10}
   jwt:
     secret: ${JWT_SECRET}
     access-token-expiration: 15m

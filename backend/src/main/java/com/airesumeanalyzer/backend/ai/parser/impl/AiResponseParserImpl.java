@@ -40,41 +40,94 @@ public class AiResponseParserImpl implements AiResponseParser {
                 );
 
         structuredResume.experience()
-                .forEach(experience ->
-                        claims.add(
-                                ProposedClaim.builder()
-                                        .claimType(ClaimType.EXPERIENCE)
-                                        .extractedValue(
-                                                experience.jobTitle()
-                                                        + " at "
-                                                        + experience.company()
-                                        )
-                                        .priority(ClaimPriority.NOT_APPLICABLE)
-                                        .sourceDocumentId(sourceDocumentId)
-                                        .build()
-                        )
-                );
+                .forEach(experience -> {
+                    List<String> evidenceTerms =
+                            nonBlankValues(
+                                    experience.jobTitle(),
+                                    experience.company(),
+                                    experience.startDate(),
+                                    experience.endDate(),
+                                    experience.description()
+                            );
+
+                    addResumeClaim(
+                            claims,
+                            ClaimType.EXPERIENCE,
+                            joinNonBlank(
+                                    " at ",
+                                    experience.jobTitle(),
+                                    experience.company()
+                            ),
+                            evidenceTerms,
+                            sourceDocumentId
+                    );
+                    addResumeClaim(
+                            claims,
+                            ClaimType.EXPERIENCE,
+                            experience.jobTitle(),
+                            evidenceTerms,
+                            sourceDocumentId
+                    );
+                    addResumeClaim(
+                            claims,
+                            ClaimType.EXPERIENCE,
+                            experience.company(),
+                            evidenceTerms,
+                            sourceDocumentId
+                    );
+                    addResumeClaim(
+                            claims,
+                            ClaimType.EXPERIENCE,
+                            experience.description(),
+                            evidenceTerms,
+                            sourceDocumentId
+                    );
+                });
 
         structuredResume.education()
                 .forEach(education -> {
 
-                    String educationValue =
-                            Stream.of(
-                                            education.degree(),
-                                            education.fieldOfStudy(),
-                                            education.institution()
-                                    )
-                                    .filter(Objects::nonNull)
-                                    .filter(value -> !value.isBlank())
-                                    .collect(Collectors.joining(" - "));
+                    List<String> evidenceTerms =
+                            nonBlankValues(
+                                    education.degree(),
+                                    education.institution(),
+                                    education.fieldOfStudy(),
+                                    education.startDate(),
+                                    education.endDate()
+                            );
 
-                    claims.add(
-                            ProposedClaim.builder()
-                                    .claimType(ClaimType.EDUCATION)
-                                    .extractedValue(educationValue)
-                                    .priority(ClaimPriority.NOT_APPLICABLE)
-                                    .sourceDocumentId(sourceDocumentId)
-                                    .build()
+                    addResumeClaim(
+                            claims,
+                            ClaimType.EDUCATION,
+                            joinNonBlank(
+                                    " - ",
+                                    education.degree(),
+                                    education.fieldOfStudy(),
+                                    education.institution()
+                            ),
+                            evidenceTerms,
+                            sourceDocumentId
+                    );
+                    addResumeClaim(
+                            claims,
+                            ClaimType.EDUCATION,
+                            education.degree(),
+                            evidenceTerms,
+                            sourceDocumentId
+                    );
+                    addResumeClaim(
+                            claims,
+                            ClaimType.EDUCATION,
+                            education.fieldOfStudy(),
+                            evidenceTerms,
+                            sourceDocumentId
+                    );
+                    addResumeClaim(
+                            claims,
+                            ClaimType.EDUCATION,
+                            education.institution(),
+                            evidenceTerms,
+                            sourceDocumentId
                     );
                 });
 
@@ -118,6 +171,42 @@ public class AiResponseParserImpl implements AiResponseParser {
                 );
 
         return claims;
+    }
+
+    private void addResumeClaim(
+            List<ProposedClaim> claims,
+            ClaimType claimType,
+            String value,
+            List<String> evidenceSearchTerms,
+            UUID sourceDocumentId
+    ) {
+        if (value == null || value.isBlank()) {
+            return;
+        }
+
+        claims.add(
+                ProposedClaim.builder()
+                        .claimType(claimType)
+                        .extractedValue(value.trim())
+                        .evidenceSearchTerms(evidenceSearchTerms)
+                        .priority(ClaimPriority.NOT_APPLICABLE)
+                        .sourceDocumentId(sourceDocumentId)
+                        .build()
+        );
+    }
+
+    private List<String> nonBlankValues(String... values) {
+        return Stream.of(values)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .toList();
+    }
+
+    private String joinNonBlank(String separator, String... values) {
+        return nonBlankValues(values)
+                .stream()
+                .collect(Collectors.joining(separator));
     }
 
 

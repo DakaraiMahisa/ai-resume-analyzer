@@ -7,8 +7,7 @@ import com.airesumeanalyzer.backend.rie.capability.embedding.EmbeddingProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Component
 public final class OllamaEmbeddingProvider
@@ -47,19 +46,31 @@ public final class OllamaEmbeddingProvider
                         .build();
     }
 
-    @Override
-    public Embedding embed(String value) {
 
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(
-                    "value must not be blank"
-            );
+    @Override
+    public Map<String, Embedding> embedBatch(Collection<String> values) {
+        Objects.requireNonNull(values, "values must not be null");
+
+        if (values.isEmpty()) {
+            return Map.of();
         }
+
+        List<String> inputs = values.stream()
+                .map(value -> {
+                    if (value == null || value.isBlank()) {
+                        throw new IllegalArgumentException(
+                                "embedding input must not be null or blank"
+                        );
+                    }
+                    return value.trim();
+                })
+                .distinct()
+                .toList();
 
         OllamaEmbeddingRequest request =
                 new OllamaEmbeddingRequest(
                         properties.model(),
-                        value.trim()
+                        inputs
                 );
 
         OllamaEmbeddingResponse response =
@@ -70,39 +81,60 @@ public final class OllamaEmbeddingProvider
                         .body(OllamaEmbeddingResponse.class);
 
         if (response == null
-                || response.embeddings() == null
-                || response.embeddings().isEmpty()
-                || response.embeddings().getFirst() == null
-                || response.embeddings().getFirst().isEmpty()) {
+                || response.embeddings() == null) {
             throw new IllegalStateException(
-                    "Ollama returned an empty embedding"
+                    "Ollama returned an invalid embedding response"
             );
         }
 
-        List<Float> vector =
-                response.embeddings().getFirst();
+        if (response.embeddings().size() != inputs.size()) {
+            throw new IllegalStateException(
+                    "Ollama returned "
+                            + response.embeddings().size()
+                            + " embeddings for "
+                            + inputs.size()
+                            + " inputs"
+            );
+        }
 
-        float[] values = new float[vector.size()];
+        Map<String, Embedding> embeddings = new LinkedHashMap<>();
 
-        for (int i = 0; i < vector.size(); i++) {
-            Float valueAtIndex = vector.get(i);
+        for (int i = 0; i < inputs.size(); i++) {
+            List<Float> vector = response.embeddings().get(i);
 
-            if (valueAtIndex == null
-                    || !Float.isFinite(valueAtIndex)) {
+            if (vector == null || vector.isEmpty()) {
                 throw new IllegalStateException(
-                        "Ollama returned an invalid embedding value"
+                        "Ollama returned an empty embedding for input: "
+                                + inputs.get(i)
                 );
             }
 
-            values[i] = valueAtIndex;
+            float[] valuesArray = new float[vector.size()];
+
+            for (int j = 0; j < vector.size(); j++) {
+                Float value = vector.get(j);
+
+                if (value == null || !Float.isFinite(value)) {
+                    throw new IllegalStateException(
+                            "Ollama returned an invalid embedding value"
+                    );
+                }
+
+                valuesArray[j] = value;
+            }
+
+            embeddings.put(
+                    inputs.get(i),
+                    new Embedding(valuesArray)
+            );
         }
 
-        return new Embedding(values);
+        return Map.copyOf(embeddings);
     }
 
     private record OllamaEmbeddingRequest(
             String model,
-            String input
+            List<String> input
     ) {
     }
 

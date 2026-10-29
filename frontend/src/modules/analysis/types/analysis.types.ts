@@ -1,5 +1,12 @@
 export type ClaimPriority = "REQUIRED" | "PREFERRED" | "NOT_APPLICABLE";
 export type AnalysisStatus = "RUNNING" | "COMPLETED" | "FAILED";
+export type AnalysisFailureCode =
+  | "INVALID_INPUT"
+  | "DOCUMENT_NOT_READY"
+  | "ANALYSIS_UNAVAILABLE"
+  | "ANALYSIS_TIMEOUT"
+  | "APPLICATION_QUOTA_EXCEEDED"
+  | "INTERNAL_ERROR";
 export type RequirementOperator = "ATOMIC" | "ALL" | "ANY";
 
 export type MatchRelationship =
@@ -91,6 +98,24 @@ export type ResumeAnalysisResponse = {
   requirementResults: RequirementMatchResult[];
   ats: ATSResult;
   recommendation: RecommendationResponse;
+};
+
+export type AnalysisErrorResponse = {
+  code: AnalysisFailureCode;
+  message: string;
+  retryable: boolean;
+};
+
+export type AnalysisStatusResponse = {
+  analysisId: string;
+  status: AnalysisStatus;
+  result: ResumeAnalysisResponse | null;
+  error: AnalysisErrorResponse | null;
+  createdAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  updatedAt: string;
+  attemptNumber: number;
 };
 
 export type AnalysisSummaryResponse = {

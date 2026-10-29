@@ -9,12 +9,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.UUID;
+import java.time.Instant;
+import java.util.Optional;
 
 public interface AnalysisRepository extends JpaRepository<Analysis, UUID> {
 
     Page<Analysis> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     long countByStatus(AnalysisStatus status);
+
+    Optional<Analysis> findByIdAndResumeOwnerId(UUID analysisId, UUID ownerId);
+
+    long countByResumeOwnerIdAndCreatedAtGreaterThanEqualAndQuotaReservedTrue(
+            UUID ownerId,
+            Instant start
+    );
 
     @Query("""
         select avg(a.overallScore)
