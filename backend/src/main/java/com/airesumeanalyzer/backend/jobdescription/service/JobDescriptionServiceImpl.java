@@ -101,7 +101,8 @@ public class JobDescriptionServiceImpl implements JobDescriptionService {
                     DocumentType.JOB_DESCRIPTION,
                     storageKey,
                     file.getOriginalFilename(),
-                    file.getInputStream()
+                    file.getInputStream(),
+                    file.getSize()
             );
         } catch (IOException exception) {
             throw new StorageException(

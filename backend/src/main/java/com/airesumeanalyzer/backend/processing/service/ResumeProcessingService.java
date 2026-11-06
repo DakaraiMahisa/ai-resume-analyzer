@@ -47,7 +47,6 @@ public class ResumeProcessingService {
 
     @Transactional
     public void processResume(UUID resumeId) {
-        log.info("Resume processing started. resumeId={}", resumeId);
 
         Resume resume = resumeRepository.findById(resumeId)
                 .orElseThrow(() ->
@@ -55,38 +54,16 @@ public class ResumeProcessingService {
                                 "Resume not found."
                         )
                 );
-        log.info(
-                "Resume record loaded. resumeId={}, storagePathPresent={}",
-                resumeId,
-                resume.getStoragePath() != null
-                && !resume.getStoragePath().isBlank()
-        );
 
         try (InputStream inputStream =
                      documentStorage.load(resume.getStoragePath())) {
 
             String extractedText =
                     textExtractor.extract(inputStream);
-            log.info(
-                    "Resume text extracted. resumeId={}, characterCount={}",
-                    resumeId,
-                    extractedText == null ? 0 : extractedText.length()
-            );
 
             resume.setRawText(extractedText);
             StructuredResume structuredResume =
                     resumeUnderstandingService.understand(extractedText);
-            log.info(
-                    "Resume AI structuring completed. resumeId={}, skills={}, "
-                            + "experience={}, education={}, projects={}, "
-                            + "certifications={}",
-                    resumeId,
-                    sizeOf(structuredResume.skills()),
-                    sizeOf(structuredResume.experience()),
-                    sizeOf(structuredResume.education()),
-                    sizeOf(structuredResume.projects()),
-                    sizeOf(structuredResume.certifications())
-            );
 
             resume.setStructuredData(
                     objectMapper.writeValueAsString(structuredResume)
@@ -97,28 +74,12 @@ public class ResumeProcessingService {
                             structuredResume,
                             resume.getId()
                     );
-            log.info(
-                    "Resume claims parsed from structured data. resumeId={}, "
-                            + "proposedClaimCount={}",
-                    resumeId,
-                    proposedClaims.size()
-            );
 
             List<ProposedClaim> enrichedClaims =
                     evidenceEnricher.enrich(
                             proposedClaims,
                             extractedText
                     );
-            log.info(
-                    "Resume claim evidence enrichment completed. resumeId={}, "
-                            + "enrichedClaimCount={}, claimsWithEvidence={}",
-                    resumeId,
-                    enrichedClaims.size(),
-                    enrichedClaims.stream()
-                            .filter(claim -> claim.evidence() != null
-                                    && !claim.evidence().isEmpty())
-                            .count()
-            );
 
             List<ProposedClaim> validClaims = new java.util.ArrayList<>();
             int rejectedClaimCount = 0;
@@ -126,36 +87,13 @@ public class ResumeProcessingService {
                 var validation = validationEngine.validate(claim);
                 if (validation.valid()) {
                     validClaims.add(claim);
-                    log.debug(
-                            "Resume claim accepted. resumeId={}, claimType={}, "
-                                    + "priority={}, value={}",
-                            resumeId,
-                            claim.claimType(),
-                            claim.priority(),
-                            claim.extractedValue()
-                    );
+
                 } else {
                     rejectedClaimCount++;
-                    log.warn(
-                            "Resume claim rejected. resumeId={}, claimType={}, "
-                                    + "priority={}, value={}, validator={}, "
-                                    + "reason={}",
-                            resumeId,
-                            claim.claimType(),
-                            claim.priority(),
-                            claim.extractedValue(),
-                            validation.validator(),
-                            validation.message()
-                    );
+
                 }
             }
-            log.info(
-                    "Resume claim validation completed. resumeId={}, accepted={}, "
-                            + "rejected={}",
-                    resumeId,
-                    validClaims.size(),
-                    rejectedClaimCount
-            );
+
 
             List<Claim> resolvedClaims =
                     claimResolutionEngine.resolve(
@@ -163,34 +101,14 @@ public class ResumeProcessingService {
                             resume.getId(),
                             DocumentType.RESUME
                     );
-            log.info(
-                    "Resume claims resolved for persistence. resumeId={}, "
-                            + "resolvedClaimCount={}",
-                    resumeId,
-                    resolvedClaims.size()
-            );
+
 
             List<Claim> persistedClaims =
                     claimPersistenceService.saveAll(resolvedClaims);
-            log.info(
-                    "Resume claims prepared; transaction commit pending. "
-                            + "resumeId={}, claimCount={}, claimTypes={}",
-                    resumeId,
-                    persistedClaims.size(),
-                    persistedClaims.stream()
-                            .collect(java.util.stream.Collectors.groupingBy(
-                                    Claim::getClaimType,
-                                    java.util.stream.Collectors.counting()
-                            ))
-            );
+
 
         } catch (IOException exception) {
-            log.error(
-                    "Resume processing failed while reading storage. "
-                            + "resumeId={}",
-                    resumeId,
-                    exception
-            );
+
             throw new ProcessingException(
                     "Unable to read the stored resume.",
                     exception

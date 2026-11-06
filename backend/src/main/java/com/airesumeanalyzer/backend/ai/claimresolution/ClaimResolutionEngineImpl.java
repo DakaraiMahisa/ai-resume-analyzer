@@ -37,13 +37,6 @@ public class ClaimResolutionEngineImpl
             );
             return List.of();
         }
-        log.info(
-                "Resolving claims. sourceDocumentId={}, sourceDocumentType={}, "
-                        + "inputClaimCount={}",
-                sourceDocumentId,
-                sourceDocumentType,
-                claims.size()
-        );
 
         if (sourceDocumentType == DocumentType.RESUME) {
             return resolveResumeClaims(

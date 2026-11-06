@@ -36,13 +36,6 @@ public class RequirementClaimConsistencyValidator {
                         .filter(Objects::nonNull)
                         .map(this::normalize)
                         .collect(java.util.stream.Collectors.toSet());
-        log.info(
-                "Checking requirement claims. requirements={}, "
-                        + "validatedClaimCount={}, distinctClaimNames={}",
-                requirements.size(),
-                requirementClaims.size(),
-                persistedNames.size()
-        );
 
         List<String> missingRequirements = new ArrayList<>();
         for (RequirementToEvaluate requirement : requirements) {
@@ -59,18 +52,10 @@ public class RequirementClaimConsistencyValidator {
         }
 
         if (!missingRequirements.isEmpty()) {
-            log.error(
-                    "Requirement claim consistency failed. missingCount={}, "
-                            + "missingRequirements={}, validatedClaimNames={}",
-                    missingRequirements.size(),
-                    missingRequirements,
-                    persistedNames
-            );
             throw new RequirementClaimConsistencyException(
                     missingRequirements
             );
         }
-        log.info("Requirement claim consistency passed.");
     }
 
     private void collectMissing(

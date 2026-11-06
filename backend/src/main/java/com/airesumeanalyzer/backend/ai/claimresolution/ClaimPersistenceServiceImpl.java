@@ -29,22 +29,9 @@ public class ClaimPersistenceServiceImpl
         }
 
         validateCanonicalNames(claims);
-        log.info(
-                "Preparing claims for persistence. claimCount={}, "
-                        + "sourceDocumentIds={}",
-                claims.size(),
-                claims.stream()
-                        .map(Claim::getSourceDocumentId)
-                        .distinct()
-                        .toList()
-        );
+
         List<Claim> persistedClaims = claimRepository.saveAll(claims);
-        log.info(
-                "Claims prepared in persistence context. requestedCount={}, "
-                        + "managedCount={} (transaction commit pending)",
-                claims.size(),
-                persistedClaims.size()
-        );
+
         return persistedClaims;
     }
 
@@ -65,15 +52,6 @@ public class ClaimPersistenceServiceImpl
             }
 
             if (canonicalName.length() > MAX_CANONICAL_NAME_LENGTH) {
-                log.error(
-                        "Claim canonical name exceeds storage limit. "
-                                + "sourceDocumentId={}, claimType={}, "
-                                + "valueLength={}, maxLength={}",
-                        claim.getSourceDocumentId(),
-                        claim.getClaimType(),
-                        canonicalName.length(),
-                        MAX_CANONICAL_NAME_LENGTH
-                );
                 throw new IllegalArgumentException(
                         "Claim canonical name exceeds maximum length of "
                                 + MAX_CANONICAL_NAME_LENGTH

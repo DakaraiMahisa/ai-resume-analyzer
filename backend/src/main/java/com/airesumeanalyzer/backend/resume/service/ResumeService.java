@@ -87,7 +87,8 @@ public class ResumeService {
                     DocumentType.RESUME,
                     storageKey,
                     file.getOriginalFilename(),
-                    file.getInputStream()
+                    file.getInputStream(),
+                    file.getSize()
             );
         } catch (IOException exception) {
             throw new StorageException(

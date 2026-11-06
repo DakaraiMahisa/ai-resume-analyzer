@@ -1,6 +1,5 @@
 package com.airesumeanalyzer.backend.embedding.service.impl;
 
-import com.airesumeanalyzer.backend.embedding.config.OllamaEmbeddingProperties;
 import com.airesumeanalyzer.backend.embedding.entity.EmbeddingRecord;
 import com.airesumeanalyzer.backend.embedding.repository.EmbeddingRecordRepository;
 import com.airesumeanalyzer.backend.embedding.service.EmbeddingService;
@@ -27,7 +26,6 @@ public class EmbeddingServiceImpl
 
     private final EmbeddingRecordRepository embeddingRecordRepository;
     private final EmbeddingProvider embeddingProvider;
-    private final OllamaEmbeddingProperties properties;
     private final MeterRegistry meterRegistry;
 
 
@@ -63,7 +61,7 @@ public class EmbeddingServiceImpl
 
            List<EmbeddingRecord> existingRecords =
                    embeddingRecordRepository.findAllByModelAndInputHashIn(
-                           properties.model(),
+                           embeddingProvider.getModelId(),
                            inputHashes.values()
                    );
            Map<String, EmbeddingRecord> existingByHash =
@@ -126,7 +124,7 @@ public class EmbeddingServiceImpl
 
                    newRecords.add(
                            EmbeddingRecord.builder()
-                                   .model(properties.model())
+                                   .model(embeddingProvider.getModelId())
                                    .inputHash(inputHashes.get(value))
                                    .inputText(value)
                                    .dimensions(embedding.vector().length)
@@ -134,8 +132,9 @@ public class EmbeddingServiceImpl
                                    .build()
                    );
                }
+
                if (!newRecords.isEmpty()) {
-                   embeddingRecordRepository.saveAll(newRecords);
+                   embeddingRecordRepository.saveAllAndFlush(newRecords);
                }
            }
            return Map.copyOf(embeddings);

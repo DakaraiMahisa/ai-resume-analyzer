@@ -3,6 +3,7 @@ package com.airesumeanalyzer.backend.common.storage;
 import com.airesumeanalyzer.backend.common.exception.base.StorageException;
 import com.airesumeanalyzer.backend.processing.enums.DocumentType;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -13,6 +14,11 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 @Component
+@ConditionalOnProperty(
+        name = "app.storage.provider",
+        havingValue = "local",
+        matchIfMissing = true
+)
 public class LocalDocumentStorage implements DocumentStorage {
 
     private final Path storageRoot;
@@ -31,7 +37,8 @@ public class LocalDocumentStorage implements DocumentStorage {
             DocumentType documentType,
             UUID storageKey,
             String originalFilename,
-            InputStream content
+            InputStream content,
+            long contentLength
     ) {
         String extension = extractExtension(originalFilename);
 
