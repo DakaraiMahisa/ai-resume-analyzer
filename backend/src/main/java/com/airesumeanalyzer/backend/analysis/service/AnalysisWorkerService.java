@@ -32,12 +32,7 @@ public class AnalysisWorkerService {
     @Async("analysisTaskExecutor")
     public void executeAsync(UUID analysisId) {
         String traceId = UUID.randomUUID().toString();
-        log.info(
-                "Analysis started. analysisId={}, traceId={}, thread={}",
-                analysisId,
-                traceId,
-                Thread.currentThread().getName()
-        );
+
         try (MDC.MDCCloseable ignored = MDC.putCloseable("traceId", traceId)) {
             execute(analysisId, traceId);
         } catch (Exception exception) {
@@ -60,82 +55,27 @@ public class AnalysisWorkerService {
                         persistenceException
                 );
             }
-            log.error(
-                    "Analysis worker failed. analysisId={}, traceId={}",
-                    analysisId,
-                    traceId,
-                    exception
-            );
+
         }
     }
 
     private void execute(UUID analysisId, String traceId) {
         try {
-            log.info(
-                    "Loading analysis inputs. analysisId={}, traceId={}",
-                    analysisId,
-                    traceId
-            );
+
             AnalysisPersistenceService.AnalysisInputs inputs =
                     persistenceService.loadInputs(analysisId);
-            log.info(
-                    "Analysis inputs loaded. analysisId={}, resumeId={}, "
-                            + "jobDescriptionId={}, traceId={}",
-                    analysisId,
-                    inputs.resumeId(),
-                    inputs.jobDescriptionId(),
-                    traceId
-            );
 
-            log.info(
-                    "Starting resume/JD requirement matching. analysisId={}, "
-                            + "traceId={}",
-                    analysisId,
-                    traceId
-            );
             List<RequirementMatchResult> requirementResults =
                     resumeJobMatchingService.match(
                             inputs.resumeId(),
                             inputs.jobDescriptionId()
                     );
-            log.info(
-                    "Requirement matching completed. analysisId={}, "
-                            + "resultCount={}, traceId={}",
-                    analysisId,
-                    requirementResults.size(),
-                    traceId
-            );
 
-            log.info(
-                    "Starting ATS scoring. analysisId={}, traceId={}",
-                    analysisId,
-                    traceId
-            );
             ATSResult atsResult = atsScoringService.score(requirementResults);
-            log.info(
-                    "ATS scoring completed. analysisId={}, overallScore={}, "
-                            + "requiredScore={}, preferredScore={}, traceId={}",
-                    analysisId,
-                    atsResult.overallScore(),
-                    atsResult.required().score(),
-                    atsResult.preferred().score(),
-                    traceId
-            );
 
-            log.info(
-                    "Starting recommendation generation. analysisId={}, "
-                            + "traceId={}",
-                    analysisId,
-                    traceId
-            );
             RecommendationResponse recommendation =
                     recommendationService.recommend(atsResult);
-            log.info(
-                    "Recommendation generation completed. analysisId={}, "
-                            + "traceId={}",
-                    analysisId,
-                    traceId
-            );
+
             String displayName = inputs.jobDescriptionDisplayName();
             ResumeAnalysisResponse response = new ResumeAnalysisResponse(
                     analysisId,
@@ -150,12 +90,7 @@ public class AnalysisWorkerService {
                     atsResult,
                     recommendation
             );
-            log.info(
-                    "Serializing and persisting completed analysis. "
-                            + "analysisId={}, traceId={}",
-                    analysisId,
-                    traceId
-            );
+
             String resultData = serializer.serialize(response);
             persistenceService.markCompleted(
                     analysisId,
@@ -164,25 +99,11 @@ public class AnalysisWorkerService {
                     atsResult.preferred().score(),
                     resultData
             );
-            log.info(
-                    "Analysis completed successfully. analysisId={}, "
-                            + "traceId={}",
-                    analysisId,
-                    traceId
-            );
+
         } catch (Exception exception) {
             AnalysisFailureClassifier.FailureClassification failure =
                     failureClassifier.classify(exception);
-            log.error(
-                    "Analysis stage failed. analysisId={}, failureCode={}, "
-                            + "retryable={}, traceId={}, exceptionType={}",
-                    analysisId,
-                    failure.code(),
-                    failure.retryable(),
-                    traceId,
-                    exception.getClass().getName(),
-                    exception
-            );
+
             persistenceService.markFailed(
                     analysisId,
                     failure.code(),
@@ -190,13 +111,7 @@ public class AnalysisWorkerService {
                     failure.retryable(),
                     traceId
             );
-            log.info(
-                    "Analysis failure persisted. analysisId={}, "
-                            + "failureCode={}, traceId={}",
-                    analysisId,
-                    failure.code(),
-                    traceId
-            );
+
         }
     }
 }

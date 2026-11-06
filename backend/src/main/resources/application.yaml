@@ -26,13 +26,17 @@ spring:
   ai:
     model:
       chat: google-genai
-
+      embedding:
+        text: google-genai
     google:
       genai:
         api-key: ${GEMINI_API_KEY}
         chat:
           model: ${GEMINI_CHAT_MODEL:gemini-2.5-flash}
-
+        embedding:
+          api-key: ${GEMINI_API_KEY}
+          text:
+            model: ${GEMINI_EMBEDDING_MODEL:gemini-embedding-2}
   output:
     ansi:
       enabled: ALWAYS
@@ -68,8 +72,18 @@ app:
     access-token-expiration: 15m
     refresh-token-expiration: 7d
 
-storage:
-  document-directory: ./storage/documents
+  storage:
+    provider: ${STORAGE_PROVIDER:local}
+    document-directory: ${DOCUMENT_STORAGE_DIRECTORY:./storage/documents}
+    b2:
+      endpoint: ${B2_ENDPOINT:}
+      region: ${B2_REGION:}
+      bucket: ${B2_BUCKET:}
+      access-key: ${B2_ACCESS_KEY:}
+      secret-key: ${B2_SECRET_KEY:}
+
+  embedding:
+    provider: ${EMBEDDING_PROVIDER:ollama}
 
   frontend:
     url: ${FRONTEND_URL:http://localhost:5173}

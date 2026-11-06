@@ -31,7 +31,7 @@ public class ResumeJobMatchingService {
     private final RequirementMatchingService requirementMatchingService;
     private final ObjectMapper objectMapper;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<RequirementMatchResult> match(
             UUID resumeId,
             UUID jobDescriptionId
@@ -58,14 +58,6 @@ public class ResumeJobMatchingService {
                         jobDescriptionId,
                         ClaimStatus.VALIDATED
                 );
-        log.info(
-                "Matching inputs loaded. resumeId={}, jobDescriptionId={}, "
-                        + "validatedResumeClaims={}, validatedRequirementClaims={}",
-                resumeId,
-                jobDescriptionId,
-                resumeClaims.size(),
-                requirementClaims.size()
-        );
 
         JobDescription jobDescription =
                 jobDescriptionRepository.findById(jobDescriptionId)
@@ -80,31 +72,11 @@ public class ResumeJobMatchingService {
                 deserializeStructuredData(
                         jobDescription.getStructuredData()
                 );
-        log.info(
-                "Structured job description loaded. jobDescriptionId={}, "
-                        + "requiredSkills={}, preferredSkills={}, "
-                        + "requiredExperience={}, preferredExperience={}, "
-                        + "requiredQualifications={}, "
-                        + "preferredQualifications={}",
-                jobDescriptionId,
-                sizeOf(structuredJobDescription.requiredSkills()),
-                sizeOf(structuredJobDescription.preferredSkills()),
-                sizeOf(structuredJobDescription.requiredExperience()),
-                sizeOf(structuredJobDescription.preferredExperience()),
-                sizeOf(structuredJobDescription.requiredQualifications()),
-                sizeOf(structuredJobDescription.preferredQualifications())
-        );
 
         List<RequirementToEvaluate> requirements =
                 extractRequirements(
                         structuredJobDescription
                 );
-        log.info(
-                "Requirements extracted for matching. jobDescriptionId={}, "
-                        + "requirementCount={}",
-                jobDescriptionId,
-                requirements.size()
-        );
 
         return requirementMatchingService.match(
                 requirements,

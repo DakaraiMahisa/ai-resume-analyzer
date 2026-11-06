@@ -54,13 +54,7 @@ public class RequirementMatchingService {
             return List.of();
         }
 
-        log.info(
-                "Validating requirement/claim consistency. requirements={}, "
-                        + "validatedRequirementClaims={}, resumeClaims={}",
-                requirements.size(),
-                requirementClaims.size(),
-                resumeClaims.size()
-        );
+
         requirementClaimConsistencyValidator.validate(
                 requirements,
                 requirementClaims
@@ -73,8 +67,6 @@ public class RequirementMatchingService {
                                 Claim::getClaimType,
                                 (left, right) -> left
                         ));
-        log.info("Requirement/claim consistency validation passed.");
-
         List<PreparedRequirement> preparedRequirements =
                 new ArrayList<>();
 
@@ -103,11 +95,6 @@ public class RequirementMatchingService {
                     )
             );
         }
-        log.info(
-                "Requirement expressions built. preparedRequirements={}",
-                preparedRequirements.size()
-        );
-
 
         Set<String> embeddingInputs =
                 new LinkedHashSet<>();
@@ -154,12 +141,7 @@ public class RequirementMatchingService {
                                 embeddingInputs
                         )
                 );
-        log.info(
-                "Embedding context prepared. embeddingInputCount={}, "
-                        + "embeddingCount={}",
-                embeddingInputs.size(),
-                embeddingContext.embeddings().size()
-        );
+
         List<SemanticMatchCandidate> semanticCandidates =
                 new ArrayList<>();
 
@@ -201,23 +183,6 @@ public class RequirementMatchingService {
                             requirementSemanticCandidates
                     )
             );
-            log.debug(
-                    "Requirement canonical pass completed. priority={}, value={}, "
-                            + "canonicalMatches={}, semanticCandidates={}, "
-                            + "canonicalCoverage={}/{}",
-                    preparedRequirement.source().priority(),
-                    preparedRequirement.source().requirement().value(),
-                    matches.size(),
-                    requirementSemanticCandidates.size(),
-                    coverageCalculator.calculate(
-                            expression,
-                            matches
-                    ).matchedComponents(),
-                    coverageCalculator.calculate(
-                            expression,
-                            matches
-                    ).totalComponents()
-            );
         }
 
         Map<SemanticMatchCandidate, MatchRelationship>
@@ -227,26 +192,7 @@ public class RequirementMatchingService {
                         : semanticBatchClassifier.classifyBatch(
                         semanticCandidates
                 );
-        log.info(
-                "Requirement matching classified candidates. "
-                        + "preparedEvaluations={}, semanticCandidates={}, "
-                        + "classifications={}",
-                preparedEvaluations.size(),
-                semanticCandidates.size(),
-                semanticClassifications.size()
-        );
 
-        for (SemanticMatchCandidate candidate : semanticCandidates) {
-            log.info(
-                    "Semantic classification result. "
-                            + "requirement='{}', resumeCapability='{}', "
-                            + "similarity={}, relationship={}",
-                    candidate.requirementValue(),
-                    candidate.resumeValue(),
-                    candidate.similarity(),
-                    semanticClassifications.get(candidate)
-            );
-        }
         for (PreparedEvaluation preparedEvaluation :
                 preparedEvaluations) {
 
@@ -284,15 +230,6 @@ public class RequirementMatchingService {
                             preparedEvaluation.expression(),
                             matches
                     );
-            log.info(
-                    "Final requirement coverage. priority={}, value={}, "
-                            + "matchedComponents={}, totalComponents={}, satisfied={}",
-                    preparedEvaluation.source().priority(),
-                    preparedEvaluation.source().requirement().value(),
-                    coverage.matchedComponents(),
-                    coverage.totalComponents(),
-                    coverage.coverage()
-            );
 
             RequirementEvaluation evaluation =
                     new RequirementEvaluation(
@@ -301,17 +238,6 @@ public class RequirementMatchingService {
                             coverage
                     );
 
-            log.debug(
-                    "Requirement final evaluation. priority={}, value={}, "
-                            + "canonicalMatches={}, acceptedSemanticMatches={}, "
-                            + "finalCoverage={}/{}",
-                    preparedEvaluation.source().priority(),
-                    preparedEvaluation.source().requirement().value(),
-                    preparedEvaluation.canonicalMatches().size(),
-                    preparedEvaluation.semanticCandidates().size(),
-                    coverage.matchedComponents(),
-                    coverage.totalComponents()
-            );
 
             RequirementToEvaluate source =
                     preparedEvaluation.source();

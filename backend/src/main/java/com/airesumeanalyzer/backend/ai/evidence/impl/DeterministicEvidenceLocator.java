@@ -2,7 +2,6 @@ package com.airesumeanalyzer.backend.ai.evidence.impl;
 
 import com.airesumeanalyzer.backend.ai.evidence.EvidenceLocator;
 import com.airesumeanalyzer.backend.ai.model.claims.Evidence;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.Locale;
 
 @Component
-@Slf4j
 public class DeterministicEvidenceLocator implements EvidenceLocator {
 
     @Override
@@ -29,19 +27,11 @@ public class DeterministicEvidenceLocator implements EvidenceLocator {
             return evidenceList;
         }
 
-        String searchValue = extractedValue.trim();
-
         NormalizedText normalizedText = normalize(rawText);
         String searchableText = normalizedText.text();
         String searchableValue = normalizeWhitespace(extractedValue)
                 .toLowerCase(Locale.ROOT);
 
-        log.info(
-                "Evidence exact-match diagnostic. searchValue={}, rawTextContains={}, rawTextLength={}",
-                searchValue,
-                searchableText.contains(searchableValue),
-                rawText.length()
-        );
         int fromIndex = 0;
 
         while (fromIndex < searchableText.length()) {

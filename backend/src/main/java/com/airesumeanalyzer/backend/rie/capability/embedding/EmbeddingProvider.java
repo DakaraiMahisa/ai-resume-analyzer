@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 
 public interface EmbeddingProvider {
+    String getModelId();
 
     Map<String, Embedding> embedBatch(Collection<String> values);
 }

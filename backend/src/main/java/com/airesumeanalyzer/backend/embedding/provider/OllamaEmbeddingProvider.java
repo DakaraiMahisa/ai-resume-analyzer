@@ -4,12 +4,18 @@ package com.airesumeanalyzer.backend.embedding.provider;
 import com.airesumeanalyzer.backend.embedding.config.OllamaEmbeddingProperties;
 import com.airesumeanalyzer.backend.rie.capability.embedding.Embedding;
 import com.airesumeanalyzer.backend.rie.capability.embedding.EmbeddingProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.util.*;
 
 @Component
+@ConditionalOnProperty(
+        name = "app.embedding.provider",
+        havingValue = "ollama",
+        matchIfMissing = true
+)
 public final class OllamaEmbeddingProvider
         implements EmbeddingProvider {
 
@@ -45,7 +51,10 @@ public final class OllamaEmbeddingProvider
                         .baseUrl(properties.baseUrl())
                         .build();
     }
-
+    @Override
+    public String getModelId() {
+        return "ollama:" + properties.model();
+    }
 
     @Override
     public Map<String, Embedding> embedBatch(Collection<String> values) {
