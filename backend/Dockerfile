@@ -15,9 +15,14 @@ RUN mvn -B clean package -DskipTests
 
 
 # Stage 2: Run the application
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-noble
 
 WORKDIR /app
+
+# Apply available Ubuntu security updates
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create a dedicated non-root user
 RUN groupadd --system app && \
