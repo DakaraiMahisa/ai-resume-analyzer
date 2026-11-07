@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: ai-resume-analyzer
@@ -37,28 +38,23 @@ spring:
       genai:
         api-key: ${GEMINI_API_KEY}
         chat:
-          model: ${GEMINI_CHAT_MODEL:gemini-2.5-flash}
+          model: ${GEMINI_CHAT_MODEL:gemini-3.8-flash}
         embedding:
           api-key: ${GEMINI_API_KEY}
           text:
             model: ${GEMINI_EMBEDDING_MODEL:gemini-embedding-2}
+
   output:
     ansi:
       enabled: ${LOG_ANSI_ENABLED:DETECT}
 
 ollama:
-  chat:
-    base-url: ${OLLAMA_CHAT_BASE_URL:http://localhost:11434}
-    model: ${OLLAMA_CHAT_MODEL:qwen2.5:3b}
-    read-timeout: ${OLLAMA_CHAT_READ_TIMEOUT:60s}
-
   embedding:
     base-url: ${OLLAMA_EMBEDDING_BASE_URL:http://localhost:11434}
     model: ${OLLAMA_EMBEDDING_MODEL:qwen3-embedding:0.6b}
 
 server:
   port: ${PORT:8080}
-
 
 management:
   endpoints:
@@ -67,17 +63,17 @@ management:
         include:
           - health
           - metrics
-
   endpoint:
     health:
       show-details: never
       probes:
         enabled: true
-# Custom Security Config
+
 app:
   analysis:
     quota:
       daily-limit: ${ANALYSIS_DAILY_LIMIT:10}
+
   jwt:
     secret: ${JWT_SECRET}
     access-token-expiration: 15m
@@ -98,6 +94,7 @@ app:
 
   frontend:
     url: ${FRONTEND_URL:http://localhost:5173}
+
 logging:
   level:
     root: INFO

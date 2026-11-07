@@ -185,12 +185,24 @@ public class RequirementMatchingService {
             );
         }
 
+        List<SemanticMatchCandidate> uniqueSemanticCandidates =
+                List.copyOf(
+                        new LinkedHashSet<>(semanticCandidates)
+                );
+
+        log.info(
+                "Semantic candidates prepared. totalCandidates={}, uniqueCandidates={}, duplicatesRemoved={}",
+                semanticCandidates.size(),
+                uniqueSemanticCandidates.size(),
+                semanticCandidates.size() - uniqueSemanticCandidates.size()
+        );
+
         Map<SemanticMatchCandidate, MatchRelationship>
                 semanticClassifications =
-                semanticCandidates.isEmpty()
+                uniqueSemanticCandidates.isEmpty()
                         ? Map.of()
                         : semanticBatchClassifier.classifyBatch(
-                        semanticCandidates
+                        uniqueSemanticCandidates
                 );
 
         for (PreparedEvaluation preparedEvaluation :
