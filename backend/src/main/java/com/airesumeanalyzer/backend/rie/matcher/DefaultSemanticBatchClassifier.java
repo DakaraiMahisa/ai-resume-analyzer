@@ -8,10 +8,7 @@ import com.airesumeanalyzer.backend.rie.domain.MatchRelationship;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Component
 public final class DefaultSemanticBatchClassifier
@@ -61,6 +58,11 @@ public final class DefaultSemanticBatchClassifier
         Map<SemanticMatchCandidate, MatchRelationship> classifications =
                 new LinkedHashMap<>();
 
+        Set<Integer> seenIndices = new HashSet<>();
+
+        Map<SemanticMatchCandidate, Integer> candidateIndexes =
+                new HashMap<>();
+
         for (SemanticClassificationItem item :
                 response.classifications()) {
 
@@ -94,15 +96,27 @@ public final class DefaultSemanticBatchClassifier
                 );
             }
 
-            if (classifications.put(
-                    candidate,
-                    relationship
-            ) != null) {
+            if (!seenIndices.add(index)) {
                 throw new IllegalStateException(
                         "AI semantic batch classifier returned duplicate candidate index: "
                                 + index
                 );
             }
+
+            Integer previousIndex = candidateIndexes.putIfAbsent(
+                    candidate,
+                    index
+            );
+
+            if (previousIndex != null) {
+                throw new IllegalStateException(
+                        "Duplicate semantic candidate detected. "
+                                + "firstIndex=" + previousIndex
+                                + ", duplicateIndex=" + index
+                );
+            }
+
+            classifications.put(candidate, relationship);
         }
 
         if (classifications.size() != candidates.size()) {
