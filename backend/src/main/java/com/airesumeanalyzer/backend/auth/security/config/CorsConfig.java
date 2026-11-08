@@ -18,7 +18,8 @@ public class CorsConfig {
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:5173",
-                        "http://localhost:3000"
+                        "http://localhost:3000",
+                        "https://lively-sand-0cb751f00.8.azurestaticapps.net"
                 )
         );
 
