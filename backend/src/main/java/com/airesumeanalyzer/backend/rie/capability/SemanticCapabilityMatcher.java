@@ -2,13 +2,8 @@ package com.airesumeanalyzer.backend.rie.capability;
 
 import com.airesumeanalyzer.backend.ai.domain.entity.Claim;
 import com.airesumeanalyzer.backend.rie.capability.embedding.Embedding;
-import com.airesumeanalyzer.backend.rie.capability.embedding.EmbeddingProvider;
-
-import com.airesumeanalyzer.backend.rie.domain.MatchRelationship;
-import com.airesumeanalyzer.backend.rie.domain.MatchingMethod;
 import com.airesumeanalyzer.backend.rie.domain.RequirementComponent;
-import com.airesumeanalyzer.backend.rie.domain.RequirementMatch;
-import com.airesumeanalyzer.backend.rie.matcher.SemanticClassifier;
+import com.airesumeanalyzer.backend.rie.matcher.EmbeddingContext;
 import com.airesumeanalyzer.backend.rie.matcher.SemanticMatchPolicy;
 import com.airesumeanalyzer.backend.rie.matcher.SemanticSimilarityCalculator;
 import org.springframework.stereotype.Component;
@@ -17,25 +12,16 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Component
-public final class SemanticCapabilityMatcher
-        implements CapabilityMatcher {
+public final class SemanticCapabilityMatcher {
 
-    private final EmbeddingProvider embeddingProvider;
     private final SemanticSimilarityCalculator similarityCalculator;
     private final SemanticMatchPolicy matchPolicy;
-    private final SemanticClassifier semanticClassifier;
 
     public SemanticCapabilityMatcher(
-            EmbeddingProvider embeddingProvider,
             SemanticSimilarityCalculator similarityCalculator,
-            SemanticMatchPolicy matchPolicy,
-            SemanticClassifier semanticClassifier
+            SemanticMatchPolicy matchPolicy
     ) {
-        this.embeddingProvider =
-                Objects.requireNonNull(
-                        embeddingProvider,
-                        "embeddingProvider must not be null"
-                );
+
 
         this.similarityCalculator =
                 Objects.requireNonNull(
@@ -49,17 +35,12 @@ public final class SemanticCapabilityMatcher
                         "matchPolicy must not be null"
                 );
 
-        this.semanticClassifier =
-                Objects.requireNonNull(
-                        semanticClassifier,
-                        "semanticClassifier must not be null"
-                );
     }
 
-    @Override
-    public Optional<RequirementMatch> match(
+    public Optional<SemanticMatchCandidate> match(
             RequirementComponent requirement,
-            Claim resumeClaim
+            Claim resumeClaim,
+            EmbeddingContext embeddingContext
     ) {
         Objects.requireNonNull(
                 requirement,
@@ -69,6 +50,11 @@ public final class SemanticCapabilityMatcher
         Objects.requireNonNull(
                 resumeClaim,
                 "resumeClaim must not be null"
+        );
+
+        Objects.requireNonNull(
+                embeddingContext,
+                "embeddingContext must not be null"
         );
 
         String requirementValue =
@@ -85,10 +71,10 @@ public final class SemanticCapabilityMatcher
         }
 
         Embedding requirementEmbedding =
-                embeddingProvider.embed(requirementValue);
+                embeddingContext.get(requirementValue);
 
         Embedding resumeEmbedding =
-                embeddingProvider.embed(resumeValue);
+                embeddingContext.get(resumeValue);
 
         double similarity =
                 similarityCalculator.calculate(
@@ -100,20 +86,13 @@ public final class SemanticCapabilityMatcher
             return Optional.empty();
         }
 
-        MatchRelationship relationship =
-                semanticClassifier.classify(
-                        requirementValue,
-                        resumeValue,
-                        similarity
-                );
-
         return Optional.of(
-                new RequirementMatch(
+                new SemanticMatchCandidate(
                         requirement.requirementClaimId(),
                         requirementValue,
                         resumeClaim.getId(),
-                        relationship,
-                        MatchingMethod.SEMANTIC
+                        resumeValue,
+                        similarity
                 )
         );
     }

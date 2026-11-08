@@ -37,7 +37,7 @@ public class Claim extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String originalValue;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000)
     private String canonicalName;
 
     @Enumerated(EnumType.STRING)

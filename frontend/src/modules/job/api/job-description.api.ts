@@ -73,3 +73,11 @@ export const createJobDescriptionFromText = async (
 export const deleteJobDescription = async (id: string): Promise<void> => {
   await apiClient.delete<ApiResponse<void>>(`/api/v1/job-descriptions/${id}`);
 };
+
+export const processJobDescription = async (
+  processingJobId: string,
+): Promise<void> => {
+  await apiClient.post<ApiResponse<void>>(
+    `/api/v1/processing/jobs/${processingJobId}/process`,
+  );
+};

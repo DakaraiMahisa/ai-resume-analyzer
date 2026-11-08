@@ -20,8 +20,7 @@ public class DocumentProcessingServiceImpl
     @Override
     public void process(UUID jobId) {
 
-        ProcessingJob job =
-                processingJobService.getJob(jobId);
+        ProcessingJob job = processingJobService.getJob(jobId);
 
         processingJobService.startJob(jobId);
 
@@ -29,21 +28,20 @@ public class DocumentProcessingServiceImpl
 
             switch (job.getDocumentType()) {
 
-                case RESUME -> resumeProcessingService.processResume(
-                        job.getDocumentId()
-                );
+                case RESUME ->
+                        resumeProcessingService.processResume(
+                                job.getDocumentId()
+                        );
 
                 case JOB_DESCRIPTION ->
                         jobDescriptionProcessingService.processJobDescription(
-                        job.getDocumentId()
-                );
+                                job.getDocumentId()
+                        );
 
                 default -> throw new ProcessingException(
-                        "Unsupported document type: "
-                                + job.getDocumentType()
+                        "Unsupported document type: " + job.getDocumentType()
                 );
             }
-            processingJobService.completeJob(jobId);
 
         } catch (Exception exception) {
 
@@ -53,12 +51,11 @@ public class DocumentProcessingServiceImpl
                 errorMessage = "Document processing failed.";
             }
 
-            processingJobService.failJob(
-                    jobId,
-                    errorMessage
-            );
+            processingJobService.failJob(jobId, errorMessage);
 
             throw exception;
         }
+
+        processingJobService.completeJob(jobId);
     }
 }

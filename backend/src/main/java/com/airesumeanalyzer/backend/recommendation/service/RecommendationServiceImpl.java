@@ -3,6 +3,7 @@ package com.airesumeanalyzer.backend.recommendation.service;
 import com.airesumeanalyzer.backend.ai.provider.AiModelProvider;
 import com.airesumeanalyzer.backend.ats.domain.model.ATSResult;
 import com.airesumeanalyzer.backend.recommendation.model.RecommendationResponse;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -14,6 +15,7 @@ public class RecommendationServiceImpl
     private final AiModelProvider aiModelProvider;
 
     public RecommendationServiceImpl(
+            @Qualifier("geminiModelProvider")
             AiModelProvider aiModelProvider
     ) {
         this.aiModelProvider =

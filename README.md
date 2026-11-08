@@ -41,10 +41,11 @@ This project blends AI-driven understanding, ATS-style scoring, secure authentic
 - Spring Boot 4.1.0
 - Spring Security
 - Spring Data JPA
-- Flyway
 - MySQL 8.4
+- Flyway
 - OpenAPI / Swagger
-- Google GenAI + Ollama-based AI integration
+- Google Gemini for chat and embeddings
+- Ollama embeddings for local development
 
 ### Frontend
 
@@ -57,8 +58,9 @@ This project blends AI-driven understanding, ATS-style scoring, secure authentic
 
 ### Infrastructure
 
+- Docker
 - Docker Compose
-- MySQL 8.4
+- Nginx
 - Environment-based configuration
 
 ---
@@ -68,15 +70,23 @@ This project blends AI-driven understanding, ATS-style scoring, secure authentic
 ```text
 ai-resume-analyzer/
 ├── backend/                  # Spring Boot API and business logic
+│   ├── Dockerfile            # Backend container image
+│   └── .dockerignore
 ├── frontend/                 # React + TypeScript application
+│   ├── Dockerfile            # Frontend build and Nginx image
+│   ├── .dockerignore
+│   └── nginx.conf            # Static file serving and API proxy
 ├── infrastructure/           # Infrastructure-related config
 ├── storage/                  # Local document storage
-├── docker-compose.yml        # Local database services
+├── docker-compose.yml        # MySQL infrastructure
+├── docker-compose.app.yml    # Frontend and backend services
 ├── .env                      # Local environment variables (not committed)
 ├── .env.example              # Environment variable template
 ├── .gitignore
 ├── README.md
 ├── docs/
+│   ├── deployment/           # Containerised deployment guide
+│   ├── testing/              # Testing strategy
 │   ├── DEVELOPMENT.md
 │   ├── SETUP.md
 │   └── handbook/
@@ -87,17 +97,20 @@ ai-resume-analyzer/
 
 ## 🧭 Project status
 
-🚧 Active foundation / early development
+✅ Working full-stack application with tested containerised deployment
 
-The repository already has a working full-stack foundation, including:
+The repository currently provides:
 
 - Java backend with Spring Boot
 - React frontend with protected routes and dashboard pages
 - MySQL database and migration setup
-- Docker-based local infrastructure
+- Docker Compose deployment for MySQL, backend, and frontend
+- Nginx frontend serving and API reverse proxy
 - AI-assisted resume/job matching flows
 
-The application is being actively expanded with more analysis workflows and product refinement.
+The containerised deployment has been successfully built, started, and
+verified using the repository's Docker Compose configuration. The application
+continues to be expanded with more analysis workflows and product refinement.
 
 ---
 
@@ -150,7 +163,7 @@ cd backend
 The API runs on:
 
 - http://localhost:8080
-- Swagger UI: http://localhost:8080/swagger-ui/index.html
+- Swagger UI: http://localhost:8080/swagger-ui.html
 
 ### 5) Run the frontend
 
@@ -163,6 +176,40 @@ npm run dev
 The frontend runs on:
 
 - http://localhost:5173
+
+### Docker quick start
+
+The repository uses separate Compose files so MySQL and the application
+services have independent lifecycles. This keeps routine frontend/backend
+rebuilds separate from the persistent database volume.
+
+1. Configure the environment:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+   Replace the placeholders in `.env` with values for the target environment.
+
+2. Start MySQL infrastructure:
+
+   ```powershell
+   docker compose up -d mysql
+   ```
+
+3. Build and start the frontend and backend:
+
+   ```powershell
+   docker compose -f docker-compose.app.yml up -d --build
+   ```
+
+The containerised application is available at:
+
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8080
+
+See the [deployment guide](docs/deployment/deployment-guide.md) for health
+checks, logs, database persistence, backups, and troubleshooting.
 
 ---
 
@@ -179,6 +226,9 @@ The project uses environment-based configuration. Key values include:
 - `GEMINI_API_KEY` — Google GenAI API key
 - `GEMINI_CHAT_MODEL` — model used for AI chat analysis
 - `FRONTEND_URL` — frontend origin used by the backend
+- `STORAGE_PROVIDER` — document storage provider
+- `B2_*` — Backblaze B2 settings when B2 storage is selected
+- `EMBEDDING_PROVIDER` — embedding provider, including local Ollama support
 
 Example values are available in `.env.example`.
 
@@ -210,12 +260,20 @@ The system is designed around a simple workflow:
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8080
-- Swagger UI: http://localhost:8080/swagger-ui/index.html
+- Swagger UI: http://localhost:8080/swagger-ui.html
 - MySQL: localhost:3307
+
+---
+
+## 📚 Documentation
+
+- [Setup guide](docs/SETUP.md)
+- [Development guide](docs/DEVELOPMENT.md)
+- [Testing strategy](docs/testing/testing-strategy.md)
+- [Deployment guide](docs/deployment/deployment-guide.md)
 
 ---
 
 ## 💡 Summary
 
 AI Resume Analyzer is a modern resume intelligence platform for understanding candidate fit in a practical, explainable way. It brings together AI analysis, structured matching, and a polished web interface to help users turn resume data into actionable hiring insights.
-

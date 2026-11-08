@@ -11,6 +11,7 @@ import com.airesumeanalyzer.backend.rie.domain.RequirementMatchResult;
 import com.airesumeanalyzer.backend.rie.domain.RequirementToEvaluate;
 import com.airesumeanalyzer.backend.rie.service.RequirementMatchingService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ResumeJobMatchingService {
 
     private final ClaimRepository claimRepository;
@@ -29,7 +31,7 @@ public class ResumeJobMatchingService {
     private final RequirementMatchingService requirementMatchingService;
     private final ObjectMapper objectMapper;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<RequirementMatchResult> match(
             UUID resumeId,
             UUID jobDescriptionId
@@ -81,6 +83,10 @@ public class ResumeJobMatchingService {
                 requirementClaims,
                 resumeClaims
         );
+    }
+
+    private int sizeOf(List<?> values) {
+        return values == null ? 0 : values.size();
     }
 
     private StructuredJobDescription deserializeStructuredData(

@@ -3,15 +3,18 @@ package com.airesumeanalyzer.backend.common.exception;
 import com.airesumeanalyzer.backend.common.api.ApiResponse;
 import com.airesumeanalyzer.backend.common.exception.base.*;
 import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
+import com.airesumeanalyzer.backend.analysis.exception.AnalysisQuotaExceededException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -25,6 +28,15 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AnalysisQuotaExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAnalysisQuota(
+            AnalysisQuotaExceededException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
@@ -113,6 +125,21 @@ public class GlobalExceptionHandler {
                                 exception.getMessage()
                         )
                 );
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(
+            MethodArgumentNotValidException ex
+    ) {
+        List<String> errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .toList();
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.validationError(errors));
     }
 
     @ExceptionHandler(Exception.class)

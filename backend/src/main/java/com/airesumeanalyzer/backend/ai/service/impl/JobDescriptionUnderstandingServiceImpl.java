@@ -5,16 +5,28 @@ import com.airesumeanalyzer.backend.ai.provider.AiModelProvider;
 import com.airesumeanalyzer.backend.ai.service.JobDescriptionUnderstandingService;
 import com.airesumeanalyzer.backend.common.exception.base.InvalidDocumentException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 
 @Service
-@RequiredArgsConstructor
 public class JobDescriptionUnderstandingServiceImpl
         implements JobDescriptionUnderstandingService {
 
     private final AiModelProvider aiModelProvider;
 
+    public JobDescriptionUnderstandingServiceImpl(
+            @Qualifier("geminiModelProvider")
+            AiModelProvider aiModelProvider
+    ) {
+        this.aiModelProvider =
+                Objects.requireNonNull(
+                        aiModelProvider,
+                        "aiModelProvider must not be null"
+                );
+    }
     @Override
     public StructuredJobDescription understand(String rawText) {
 

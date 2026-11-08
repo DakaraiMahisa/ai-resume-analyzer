@@ -1,6 +1,10 @@
 package com.airesumeanalyzer.backend.rie.capability.embedding;
 
-public interface EmbeddingProvider {
+import java.util.Collection;
+import java.util.Map;
 
-    Embedding embed(String value);
+public interface EmbeddingProvider {
+    String getModelId();
+
+    Map<String, Embedding> embedBatch(Collection<String> values);
 }

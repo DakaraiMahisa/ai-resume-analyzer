@@ -16,3 +16,4 @@ export * from "@/modules/job/components/DeleteJobDescriptionDialog";
 
 export * from "@/modules/job/pages/JobDescriptionsPage";
 export * from "@/modules/job/pages/JobDescriptionDetailPage";
+export * from "@/modules/job/hooks/use-process-job-description";

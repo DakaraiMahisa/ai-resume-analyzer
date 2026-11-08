@@ -2,6 +2,7 @@ package com.airesumeanalyzer.backend.analysis.entity;
 
 
 import com.airesumeanalyzer.backend.analysis.enums.AnalysisStatus;
+import com.airesumeanalyzer.backend.analysis.enums.AnalysisFailureCode;
 import com.airesumeanalyzer.backend.common.entity.BaseEntity;
 import com.airesumeanalyzer.backend.jobdescription.entity.JobDescription;
 import com.airesumeanalyzer.backend.resume.entity.Resume;
@@ -51,8 +52,37 @@ public class Analysis extends BaseEntity {
     @Column(name = "result_data", columnDefinition = "json")
     private String resultData;
 
+    @Column(name = "error_message", columnDefinition = "TEXT")
+    private String errorMessage;
+
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    @Column(name = "started_at")
+    private Instant startedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "failure_code", length = 50)
+    private AnalysisFailureCode failureCode;
+
+    @Column(nullable = false)
+    private boolean retryable;
+
+    @Column(name = "failure_trace_id", length = 100)
+    private String failureTraceId;
+
+    @Column(name = "attempt_number", nullable = false)
+    private int attemptNumber;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_analysis_id")
+    private Analysis parentAnalysis;
+
+    @Column(name = "quota_reserved", nullable = false)
+    private boolean quotaReserved;
+
+    @Column(name = "quota_consumed", nullable = false)
+    private boolean quotaConsumed;
 
 
     public void markCompleted(
@@ -68,13 +98,25 @@ public class Analysis extends BaseEntity {
         this.preferredScore = preferredScore;
         this.resultData = resultData;
         this.completedAt = completedAt;
+        this.retryable = false;
+        this.quotaReserved = false;
+        this.quotaConsumed = true;
     }
 
-    public void markFailed(String errorMessage) {
+    public void markFailed(
+            AnalysisFailureCode failureCode,
+            String errorMessage,
+            boolean retryable,
+            String failureTraceId
+    ) {
         this.status = AnalysisStatus.FAILED;
-        this.resultData = errorMessage;
+        this.failureCode = failureCode;
+        this.errorMessage = errorMessage;
+        this.retryable = retryable;
+        this.failureTraceId = failureTraceId;
+        this.quotaReserved = false;
+        this.quotaConsumed = false;
     }
 
 
 }
-

@@ -31,9 +31,8 @@ public class JwtService {
 
     @PostConstruct
     void initializeSigningKey() {
-
         byte[] keyBytes =
-                Decoders.BASE64.decode(jwtProperties.secret());
+                HexFormat.of().parseHex(jwtProperties.secret());
 
         signingKey = Keys.hmacShaKeyFor(keyBytes);
     }

@@ -1,15 +1,19 @@
 package com.airesumeanalyzer.backend.rie.matcher;
 
 import com.airesumeanalyzer.backend.ai.domain.entity.Claim;
+import com.airesumeanalyzer.backend.ai.model.claims.ClaimType;
 import com.airesumeanalyzer.backend.rie.domain.RequirementExpression;
-import com.airesumeanalyzer.backend.rie.domain.RequirementMatch;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public interface RequirementMatcher {
 
-    List<RequirementMatch> match(
+    RequirementMatchingResult match(
             RequirementExpression requirement,
-            List<Claim> resumeClaims
+            Map<UUID, ClaimType> requirementClaimTypes,
+            List<Claim> resumeClaims,
+            EmbeddingContext embeddingContext
     );
 }

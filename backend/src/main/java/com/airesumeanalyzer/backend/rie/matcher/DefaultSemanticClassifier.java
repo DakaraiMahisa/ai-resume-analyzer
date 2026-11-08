@@ -3,6 +3,7 @@ package com.airesumeanalyzer.backend.rie.matcher;
 import com.airesumeanalyzer.backend.ai.provider.AiModelProvider;
 import com.airesumeanalyzer.backend.rie.classifier.dto.SemanticClassificationResponse;
 import com.airesumeanalyzer.backend.rie.domain.MatchRelationship;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -14,6 +15,7 @@ public final class DefaultSemanticClassifier
     private final AiModelProvider aiModelProvider;
 
     public DefaultSemanticClassifier(
+            @Qualifier("geminiModelProvider")
             AiModelProvider aiModelProvider
     ) {
         this.aiModelProvider =

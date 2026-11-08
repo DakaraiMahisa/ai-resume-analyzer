@@ -17,6 +17,7 @@ import com.airesumeanalyzer.backend.processing.extraction.TextExtractor;
 import com.airesumeanalyzer.backend.resume.entity.Resume;
 import com.airesumeanalyzer.backend.resume.repository.ResumeRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -28,6 +29,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ResumeProcessingService {
 
     private final ResumeRepository resumeRepository;
@@ -79,14 +81,19 @@ public class ResumeProcessingService {
                             extractedText
                     );
 
-            List<ProposedClaim> validClaims =
-                    enrichedClaims.stream()
-                            .filter(claim ->
-                                    validationEngine
-                                            .validate(claim)
-                                            .valid()
-                            )
-                            .toList();
+            List<ProposedClaim> validClaims = new java.util.ArrayList<>();
+            int rejectedClaimCount = 0;
+            for (ProposedClaim claim : enrichedClaims) {
+                var validation = validationEngine.validate(claim);
+                if (validation.valid()) {
+                    validClaims.add(claim);
+
+                } else {
+                    rejectedClaimCount++;
+
+                }
+            }
+
 
             List<Claim> resolvedClaims =
                     claimResolutionEngine.resolve(
@@ -95,13 +102,21 @@ public class ResumeProcessingService {
                             DocumentType.RESUME
                     );
 
-            claimPersistenceService.saveAll(resolvedClaims);
+
+            List<Claim> persistedClaims =
+                    claimPersistenceService.saveAll(resolvedClaims);
+
 
         } catch (IOException exception) {
+
             throw new ProcessingException(
                     "Unable to read the stored resume.",
                     exception
             );
         }
+    }
+
+    private int sizeOf(List<?> values) {
+        return values == null ? 0 : values.size();
     }
 }

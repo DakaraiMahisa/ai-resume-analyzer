@@ -1,136 +1,182 @@
 package com.airesumeanalyzer.backend.analysis.service;
 
+import com.airesumeanalyzer.backend.analysis.dto.AnalysisStatusResponse;
 import com.airesumeanalyzer.backend.analysis.entity.Analysis;
-import com.airesumeanalyzer.backend.analysis.model.ResumeAnalysisResponse;
-import com.airesumeanalyzer.backend.ats.domain.model.ATSResult;
-import com.airesumeanalyzer.backend.ats.service.ATSScoringService;
-import com.airesumeanalyzer.backend.jobdescription.dto.JobDescriptionContext;
+import com.airesumeanalyzer.backend.analysis.enums.AnalysisStatus;
+import com.airesumeanalyzer.backend.analysis.repository.AnalysisRepository;
+import com.airesumeanalyzer.backend.common.exception.base.ConflictException;
+import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundException;
 import com.airesumeanalyzer.backend.jobdescription.entity.JobDescription;
 import com.airesumeanalyzer.backend.jobdescription.repository.JobDescriptionRepository;
-import com.airesumeanalyzer.backend.matching.service.ResumeJobMatchingService;
-import com.airesumeanalyzer.backend.recommendation.model.RecommendationResponse;
-import com.airesumeanalyzer.backend.recommendation.service.RecommendationService;
 import com.airesumeanalyzer.backend.resume.entity.Resume;
 import com.airesumeanalyzer.backend.resume.repository.ResumeRepository;
-import com.airesumeanalyzer.backend.rie.domain.RequirementMatchResult;
-
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ResumeAnalysisService {
 
-    private final ResumeJobMatchingService resumeJobMatchingService;
-    private final ATSScoringService atsScoringService;
-    private final RecommendationService recommendationService;
-
-    private final AnalysisPersistenceService analysisPersistenceService;
-    private final AnalysisResultSerializer analysisResultSerializer;
-
     private final ResumeRepository resumeRepository;
     private final JobDescriptionRepository jobDescriptionRepository;
+    private final AnalysisRepository analysisRepository;
+    private final AnalysisPersistenceService persistenceService;
+    private final AnalysisQuotaService quotaService;
+    private final AnalysisWorkerService workerService;
+    private final AnalysisQueryService queryService;
 
     @Transactional
-    public ResumeAnalysisResponse analyze(
+    public AnalysisStatusResponse start(
+            UUID ownerId,
             UUID resumeId,
             UUID jobDescriptionId
     ) {
-
-        Objects.requireNonNull(
-                resumeId,
-                "resumeId must not be null"
+        log.info(
+                "Starting resume analysis. ownerId={}, resumeId={}, jobDescriptionId={}",
+                ownerId, resumeId, jobDescriptionId
         );
 
-        Objects.requireNonNull(
-                jobDescriptionId,
-                "jobDescriptionId must not be null"
+        Resume resume = resumeRepository.findByIdAndOwnerId(resumeId, ownerId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Resume or job description was not found"
+                ));
+        JobDescription jobDescription = jobDescriptionRepository
+                .findByIdAndOwnerId(jobDescriptionId, ownerId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Resume or job description was not found"
+                ));
+
+        log.debug(
+                "Resume and job description retrieved successfully. resumeId={}, jobDescriptionId={}",
+                resumeId, jobDescriptionId
         );
 
-        Resume resume = resumeRepository.findById(resumeId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Resume not found: " + resumeId
-                        )
-                );
+        log.debug("Validating analysis quota. ownerId={}", ownerId);
+        quotaService.assertAvailable(ownerId);
 
-        JobDescription jobDescription =
-                jobDescriptionRepository.findById(jobDescriptionId)
-                        .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Job description not found: "
-                                                + jobDescriptionId
-                                )
-                        );
+        log.debug("Analysis quota validated. ownerId={}", ownerId);
 
-        String jobDescriptionDisplayName =
-                jobDescription.getOriginalFilename() != null
-                        ? jobDescription.getOriginalFilename()
-                        : "Pasted job description";
+        Analysis analysis = persistenceService.createRunning(
+                resume,
+                jobDescription
+        );
 
-        Analysis analysis =
-                analysisPersistenceService.createRunning(
-                        resume,
-                        jobDescription
-                );
+        UUID analysisId = analysis.getId();
 
-        try {
+        log.info(
+                "Analysis record created. analysisId={}, resumeId={}, jobDescriptionId={}",
+                analysisId, resumeId, jobDescriptionId
+        );
 
-            List<RequirementMatchResult> requirementResults =
-                    resumeJobMatchingService.match(
-                            resumeId,
-                            jobDescriptionId
-                    );
+        log.info(
+                "Dispatching asynchronous analysis. analysisId={}",
+                analysisId
+        );
+        workerService.executeAsync(analysis.getId());
 
-            ATSResult atsResult =
-                    atsScoringService.score(
-                            requirementResults
-                    );
+        log.info(
+                "Asynchronous analysis dispatch completed. analysisId={}",
+                analysisId
+        );
+        return queryService.toStatusResponse(analysis);
+    }
 
-            RecommendationResponse recommendation =
-                    recommendationService.recommend(
-                            atsResult
-                    );
+    @Transactional
+    public AnalysisStatusResponse retry(UUID ownerId, UUID analysisId) {
 
-            ResumeAnalysisResponse response =
-                    new ResumeAnalysisResponse(
-                            analysis.getId(),
-                            resumeId,
-                            new JobDescriptionContext(
-                                    jobDescription.getId(),
-                                    jobDescriptionDisplayName
-                            ),
-                            requirementResults,
-                            atsResult,
-                            recommendation
-                    );
+        log.info(
+                "Retry requested for analysis. ownerId={}, analysisId={}",
+                ownerId, analysisId
+        );
 
-            String resultData =
-                    analysisResultSerializer.serialize(response);
+        Analysis previous = analysisRepository
+                .findByIdAndResumeOwnerId(analysisId, ownerId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Analysis not found"
+                ));
 
-            analysisPersistenceService.markCompleted(
-                    analysis.getId(),
-                    atsResult.overallScore(),
-                    atsResult.required().score(),
-                    atsResult.preferred().score(),
-                    resultData
+        if (previous.getStatus() != AnalysisStatus.FAILED
+                || !previous.isRetryable()) {
+
+            log.warn(
+                    "Analysis retry rejected. analysisId={}, status={}, retryable={}",
+                    analysisId,
+                    previous.getStatus(),
+                    previous.isRetryable()
             );
 
-            return response;
-
-        } catch (Exception exception) {
-
-            analysisPersistenceService.markFailed(
-                    analysis.getId(),
-                    exception.getMessage()
+            throw new ConflictException(
+                    "Only retryable failed analyses can be retried."
             );
-
-            throw exception;
         }
+
+        log.debug("Validating quota for analysis retry. ownerId={}", ownerId);
+        quotaService.assertAvailable(ownerId);
+
+        Analysis retry = persistenceService.createRetry(
+                previous,
+                previous.getResume(),
+                previous.getJobDescription()
+        );
+
+        UUID retryAnalysisId = retry.getId();
+
+        log.info(
+                "Retry analysis record created. previousAnalysisId={}, retryAnalysisId={}, attemptNumber={}",
+                analysisId,
+                retryAnalysisId,
+                retry.getAttemptNumber()
+        );
+
+        log.info(
+                "Dispatching retry asynchronously. analysisId={}",
+                retryAnalysisId
+        );
+
+        workerService.executeAsync(retry.getId());
+        return queryService.toStatusResponse(retry);
+    }
+
+    @Transactional
+    public void delete(UUID ownerId, UUID analysisId) {
+
+        log.info(
+                "Analysis deletion requested. ownerId={}, analysisId={}",
+                ownerId, analysisId
+        );
+
+        Analysis analysis = analysisRepository
+                .findByIdAndResumeOwnerId(analysisId, ownerId)
+                .orElseThrow(() ->{
+                    log.warn(
+                            "Analysis not found or access denied. ownerId={}, analysisId={}",
+                            ownerId, analysisId
+                    );
+                    return new ResourceNotFoundException(
+                            "Analysis not found"
+                    );
+                });
+
+        if (analysis.getStatus() == AnalysisStatus.RUNNING) {
+
+            log.warn(
+                    "Analysis deletion rejected because analysis is running. analysisId={}",
+                    analysisId
+            );
+            throw new ConflictException(
+                    "Running analyses cannot be deleted."
+            );
+        }
+
+        analysisRepository.delete(analysis);
+
+        log.info(
+                "Analysis deleted successfully. analysisId={}, ownerId={}",
+                analysisId, ownerId
+        );
     }
 }

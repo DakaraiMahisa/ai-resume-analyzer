@@ -6,7 +6,6 @@ import com.airesumeanalyzer.backend.ai.domain.entity.Claim;
 import com.airesumeanalyzer.backend.ai.evidence.EvidenceEnricher;
 import com.airesumeanalyzer.backend.ai.model.claims.ProposedClaim;
 import com.airesumeanalyzer.backend.ai.model.understanding.StructuredJobDescription;
-import com.airesumeanalyzer.backend.ai.model.understanding.StructuredResume;
 import com.airesumeanalyzer.backend.ai.parser.AiResponseParser;
 import com.airesumeanalyzer.backend.ai.service.JobDescriptionUnderstandingService;
 import com.airesumeanalyzer.backend.ai.validation.ValidationEngine;
@@ -18,6 +17,7 @@ import com.airesumeanalyzer.backend.processing.enums.DocumentType;
 import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
 import com.airesumeanalyzer.backend.processing.extraction.TextExtractor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -29,6 +29,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class JobDescriptionProcessingService {
 
     private final JobDescriptionRepository jobDescriptionRepository;
@@ -86,15 +87,14 @@ public class JobDescriptionProcessingService {
                             extractedText
                     );
 
+            List<ProposedClaim> validClaims = new java.util.ArrayList<>();
 
-            List<ProposedClaim> validClaims =
-                    enrichedClaims.stream()
-                            .filter(claim ->
-                                    validationEngine
-                                            .validate(claim)
-                                            .valid()
-                            )
-                            .toList();
+            for (ProposedClaim claim : enrichedClaims) {
+                var validation = validationEngine.validate(claim);
+                if (validation.valid()) {
+                    validClaims.add(claim);
+                }
+            }
 
 
             List<Claim> resolvedClaims =
@@ -104,15 +104,15 @@ public class JobDescriptionProcessingService {
                             DocumentType.JOB_DESCRIPTION
                     );
 
-            claimPersistenceService.saveAll(
-                    resolvedClaims
-            );
+            claimPersistenceService.saveAll(resolvedClaims);
 
         } catch (IOException exception) {
+
             throw new ProcessingException(
                     "Unable to read the stored job description.",
                     exception
             );
         }
     }
+
 }

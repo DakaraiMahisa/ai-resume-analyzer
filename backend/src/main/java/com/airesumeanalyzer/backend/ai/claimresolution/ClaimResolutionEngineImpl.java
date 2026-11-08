@@ -7,6 +7,7 @@ import com.airesumeanalyzer.backend.ai.model.claims.ProposedClaim;
 import com.airesumeanalyzer.backend.processing.enums.DocumentType;
 import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
@@ -14,6 +15,7 @@ import java.util.*;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ClaimResolutionEngineImpl
         implements ClaimResolutionEngine {
 
@@ -27,6 +29,12 @@ public class ClaimResolutionEngineImpl
     ) {
 
         if (claims == null || claims.isEmpty()) {
+            log.warn(
+                    "No claims available for resolution. sourceDocumentId={}, "
+                            + "sourceDocumentType={}",
+                    sourceDocumentId,
+                    sourceDocumentType
+            );
             return List.of();
         }
 
@@ -38,7 +46,7 @@ public class ClaimResolutionEngineImpl
             );
         }
 
-        return claims.stream()
+        List<Claim> resolvedClaims = claims.stream()
                 .map(claim ->
                         buildClaim(
                                 claim,
@@ -47,6 +55,13 @@ public class ClaimResolutionEngineImpl
                         )
                 )
                 .toList();
+        log.info(
+                "Claims resolved without deduplication. sourceDocumentId={}, "
+                        + "resolvedClaimCount={}",
+                sourceDocumentId,
+                resolvedClaims.size()
+        );
+        return resolvedClaims;
     }
 
     private List<Claim> resolveResumeClaims(

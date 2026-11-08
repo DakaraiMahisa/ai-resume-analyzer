@@ -1,15 +1,28 @@
 package com.airesumeanalyzer.backend.ai.provider;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-@Component
-@RequiredArgsConstructor
-public class GeminiModelProvider implements AiModelProvider {
+import java.util.Objects;
+
+@Component("geminiModelProvider")
+public class GeminiModelProvider
+        implements AiModelProvider {
+
 
     private final ChatClient chatClient;
 
+    public GeminiModelProvider(
+            @Qualifier("geminiChatClient")
+            ChatClient chatClient
+    ) {
+        this.chatClient =
+                Objects.requireNonNull(
+                        chatClient,
+                        "chatClient must not be null"
+                );
+    }
     @Override
     public <T> T generate(
             String prompt,

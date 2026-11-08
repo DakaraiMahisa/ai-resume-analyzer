@@ -11,7 +11,8 @@ public interface DocumentStorage {
             DocumentType documentType,
             UUID storageKey,
             String originalFilename,
-            InputStream content
+            InputStream content,
+            long contentLength
     );
 
     InputStream load(String storagePath);

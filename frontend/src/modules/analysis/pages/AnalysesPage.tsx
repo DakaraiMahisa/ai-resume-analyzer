@@ -1,9 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ErrorState, LoadingState } from "@/components/feedback";
-import { Badge, Card } from "@/components/ui";
+import { Badge, Button, Card } from "@/components/ui";
 import {
   useAnalysisDashboardSummary,
+  useDeleteAnalysis,
+  useRetryAnalysis,
   useRecentAnalyses,
 } from "@/modules/analysis";
 
@@ -53,6 +55,9 @@ function getStatusLabel(status: "RUNNING" | "COMPLETED" | "FAILED") {
 
 export function AnalysesPage() {
   const [page, setPage] = useState(0);
+  const navigate = useNavigate();
+  const retryMutation = useRetryAnalysis();
+  const deleteMutation = useDeleteAnalysis();
 
   const {
     data: analyses,
@@ -185,18 +190,18 @@ export function AnalysesPage() {
           <Card className="overflow-hidden">
             <div className="divide-y divide-border">
               {analyses?.analyses.map((analysis) => (
-                <Link
+                <div
                   key={analysis.analysisId}
-                  to={`/app/analyses/${analysis.analysisId}`}
                   className={[
-                    "group block px-5 py-5 transition-colors",
+                    "group px-5 py-5 transition-colors",
                     "hover:bg-surface-muted/50",
-                    "focus-visible:outline-none",
-                    "focus-visible:ring-2 focus-visible:ring-inset",
-                    "focus-visible:ring-brand/30",
                   ].join(" ")}
                 >
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                  <Link
+                    to={`/app/analyses/${analysis.analysisId}`}
+                    className="block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+                  >
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="truncate text-sm font-semibold text-text-primary">
@@ -241,8 +246,45 @@ export function AnalysesPage() {
                         →
                       </span>
                     </div>
+                    </div>
+                  </Link>
+                  <div className="mt-4 flex gap-2">
+                    {analysis.status === "FAILED" && (
+                      <Button
+                        size="sm"
+                        loading={
+                          retryMutation.isPending &&
+                          retryMutation.variables === analysis.analysisId
+                        }
+                        onClick={() =>
+                          retryMutation.mutate(analysis.analysisId, {
+                            onSuccess: (retry) =>
+                              navigate(`/app/analyses/${retry.analysisId}`),
+                          })
+                        }
+                      >
+                        Try again
+                      </Button>
+                    )}
+                    {analysis.status !== "RUNNING" && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        loading={
+                          deleteMutation.isPending &&
+                          deleteMutation.variables === analysis.analysisId
+                        }
+                        onClick={() => {
+                          if (window.confirm("Delete this analysis?")) {
+                            deleteMutation.mutate(analysis.analysisId);
+                          }
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    )}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </Card>
