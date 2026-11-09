@@ -19,7 +19,8 @@ public class CorsConfig {
                 List.of(
                         "http://localhost:5173",
                         "http://localhost:3000",
-                        "https://lively-sand-0cb751f00.8.azurestaticapps.net"
+                        "https://lively-sand-0cb751f00.8.azurestaticapps.net",
+                        "https://rolenexa.dmahisa.me"
                 )
         );
 

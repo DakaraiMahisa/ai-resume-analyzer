@@ -18,9 +18,10 @@ export function LandingPage() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-7 text-text-secondary sm:text-lg">
-              AI Resume Analyzer compares your resume with a specific job
-              description to uncover relevant skills, supporting evidence,
-              missing requirements, and actionable opportunities to improve.
+              RoleNexa compares your resume with a specific job description to
+              identify matching skills, evaluate supporting evidence, uncover
+              missing requirements, and show you where to improve before
+              applying.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -51,7 +52,10 @@ export function LandingPage() {
           {/* Product Preview */}
           <div className="relative">
             <div className="absolute -inset-4 -z-10 rounded-3xl bg-brand/5 blur-2xl" />
-
+            <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Illustrative analysis preview
+            </p>
             <Card className="overflow-hidden shadow-lg">
               <div className="border-b border-border px-5 py-4">
                 <div className="flex items-center justify-between">
@@ -162,9 +166,9 @@ export function LandingPage() {
             </h2>
 
             <p className="mt-4 text-sm leading-6 text-text-secondary sm:text-base">
-              A single score tells you very little. AI Resume Analyzer turns
-              your resume and the target job into structured, explainable
-              intelligence you can actually act on.
+              A single score tells you very little. RoleNexa transforms your
+              resume and the target job into structured, explainable insights
+              you can actually act on.
             </p>
           </div>
 
@@ -293,6 +297,17 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+      <footer className="border-t border-border bg-background">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+          <p className="text-sm text-text-tertiary">
+            © {new Date().getFullYear()} RoleNexa. All rights reserved.
+          </p>
+
+          <p className="text-sm text-text-tertiary">
+            Understand your fit. Apply with confidence.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
