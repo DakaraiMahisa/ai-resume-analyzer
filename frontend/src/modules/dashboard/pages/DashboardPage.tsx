@@ -85,9 +85,9 @@ export function DashboardPage() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary sm:text-base">
-            Compare your resume with a target job, understand your strengths and
-            gaps, and get practical recommendations for improving your
-            application.
+            RoleNexa helps you evaluate your resume against real job
+            requirements, understand the evidence behind your match, and
+            identify gaps worth addressing before you apply.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -240,7 +240,7 @@ export function DashboardPage() {
               </p>
 
               <Link
-                to="/app/analyze"
+                to="/app/analyses"
                 className="mt-4 inline-block text-sm font-medium text-brand hover:text-brand-hover"
               >
                 Start your first analysis →

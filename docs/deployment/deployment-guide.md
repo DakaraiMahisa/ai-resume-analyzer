@@ -14,8 +14,10 @@ environment:
 - **Nginx** serves the React application, supports client-side routes, and
   proxies browser requests under `/api/` to the backend container.
 
-The Compose files provide containerised local or server deployment. They do
-not by themselves constitute a completed production cloud deployment.
+The Compose files provide containerised local or server deployment. Production
+deployment is automated separately by `.github/workflows/ci.yml`: successful
+`main` pushes publish the backend image to GHCR, update Azure Container Apps,
+and deploy the tested frontend artifact to Azure Static Web Apps.
 
 ## 2. Prerequisites
 
@@ -224,6 +226,67 @@ The expected application endpoints are:
 
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:8080`
+
+### 5.4 GitHub Actions CI/CD deployment
+
+The workflow in `.github/workflows/ci.yml` runs on GitHub-hosted Ubuntu
+runners. It is triggered by pushes to `main`, `develop`, and
+`feature/**`, and by pull requests targeting `main` or `develop`.
+
+Every workflow run performs these checks:
+
+1. **Backend Tests** checks out the repository, sets up Temurin Java 21 with
+   Maven caching, and runs `./mvnw --batch-mode --no-transfer-progress clean
+   verify` from `backend`.
+2. **Frontend Checks** sets up Node.js 22 with npm caching, runs `npm ci`,
+   ESLint, and the production build from `frontend`. The build receives
+   `VITE_API_BASE_URL` set to the deployed Azure Container Apps backend URL.
+   The resulting `frontend/dist` is uploaded as the short-lived
+   `frontend-dist` artifact.
+3. **Security Scan & Docker Build** waits for both checks, scans the
+   repository filesystem with Trivy for HIGH and CRITICAL vulnerabilities,
+   builds both backend and frontend images, scans both images, generates
+   CycloneDX SBOMs, and uploads them as the `container-sboms` artifact.
+
+The Docker job logs in to GHCR and publishes **only the backend image** on a
+push to `main`. The published tag is the commit SHA:
+
+```text
+ghcr.io/dakaraimahisa/ai-resume-analyzer-backend:<commit-sha>
+```
+
+The frontend is deployed from the tested `frontend-dist` artifact rather than
+from a published frontend container image.
+
+The **Deploy to Azure Production** job runs only after the backend checks,
+frontend checks, and Docker/security job succeed, and only for a push to
+`main`. It:
+
+1. Authenticates to Azure with OIDC using the `AZURE_CLIENT_ID`,
+   `AZURE_TENANT_ID`, and `AZURE_SUBSCRIPTION_ID` repository secrets.
+2. Installs or upgrades the Azure Container Apps CLI extension.
+3. Updates Container App `aira-backend` in resource group
+   `rg-ai-resume-analyzer-prod` to the backend image tagged with the current
+   commit SHA.
+4. Verifies the backend at
+   `https://aira-backend.proudground-834143ea.southeastasia.azurecontainerapps.io/actuator/health`.
+5. Downloads the `frontend-dist` artifact and deploys `frontend/dist` to Azure
+   Static Web Apps using the `AZURE_STATIC_WEB_APPS_API_TOKEN` secret.
+6. Verifies the frontend at
+   `https://lively-sand-0cb751f00.8.azurestaticapps.net/`.
+
+The workflow requires these repository secrets for production deployment:
+
+| Secret | Used by |
+|---|---|
+| `AZURE_CLIENT_ID` | Azure OIDC login |
+| `AZURE_TENANT_ID` | Azure OIDC login |
+| `AZURE_SUBSCRIPTION_ID` | Azure OIDC login |
+| `AZURE_STATIC_WEB_APPS_API_TOKEN` | Static Web Apps deployment |
+
+The workflow grants `id-token: write` only to the deploy job and
+`packages: write` to the Docker job. Pull requests and non-`main` pushes run
+validation and security checks but do not publish images or deploy production.
 
 ## 6. Application verification
 
@@ -513,6 +576,13 @@ environment.
 - [ ] A non-production account can start an analysis, or a provider failure
       is clearly reported and investigated.
 - [ ] Logs and a recent database backup are available for the deployment.
+- [ ] For production, the `main` workflow has passed backend, frontend, Docker,
+      Trivy, and SBOM checks.
+- [ ] Production deployment secrets are configured:
+      `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, and
+      `AZURE_STATIC_WEB_APPS_API_TOKEN`.
+- [ ] The deployed Azure Container Apps health URL returns success.
+- [ ] The deployed Azure Static Web Apps URL loads successfully.
 
 ## Configuration requiring manual confirmation
 
@@ -527,3 +597,8 @@ The checked-in Compose file does not pass a `VITE_API_BASE_URL` build argument
 or frontend environment file. The intended containerised routing remains the
 relative `/api/` path through Nginx; confirm this behavior if the frontend API
 configuration changes.
+
+The GitHub Actions frontend build uses the deployed Container Apps URL through
+`VITE_API_BASE_URL`. If that backend hostname, Azure Container App name,
+resource group, Static Web Apps deployment target, or repository secret names
+change, update `.github/workflows/ci.yml` and this guide together.

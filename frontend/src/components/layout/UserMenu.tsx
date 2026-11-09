@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { useLogout } from "@/modules/auth";
 import { useCurrentUser } from "@/modules/user";
@@ -89,19 +89,6 @@ export function UserMenu() {
           </div>
 
           <div className="my-1 h-px bg-border" />
-
-          <Link
-            to="/app/settings"
-            role="menuitem"
-            onClick={() => setIsOpen(false)}
-            className={[
-              "block rounded-md px-3 py-2 text-sm",
-              "text-text-secondary transition-colors",
-              "hover:bg-surface-muted hover:text-text-primary",
-            ].join(" ")}
-          >
-            Settings
-          </Link>
 
           <button
             type="button"
