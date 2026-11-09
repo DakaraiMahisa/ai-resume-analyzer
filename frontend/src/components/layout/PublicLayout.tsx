@@ -1,18 +1,13 @@
 import { Link, Outlet } from "react-router-dom";
 
 import { ThemeToggle } from "@/components/ui";
-
+import { RoleNexaLogo } from "@/components/common";
 export function PublicLayout() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link
-            to="/"
-            className="text-lg font-semibold tracking-tight text-text-primary"
-          >
-            AI Resume Analyzer
-          </Link>
+          <RoleNexaLogo />
 
           <nav
             aria-label="Primary navigation"
