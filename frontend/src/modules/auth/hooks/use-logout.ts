@@ -1,10 +1,12 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { useAuthStore } from "@/core/auth/auth-store";
 import { tokenStorage } from "@/core/auth/token-storage";
 import { logout } from "@/modules/auth/api/auth.api";
 
 export const useLogout = () => {
+  const queryClient = useQueryClient();
+
   const clearAuthentication = useAuthStore(
     (state) => state.clearAuthentication,
   );
@@ -23,6 +25,7 @@ export const useLogout = () => {
     },
 
     onSettled: () => {
+      queryClient.clear();
       clearAuthentication();
     },
   });

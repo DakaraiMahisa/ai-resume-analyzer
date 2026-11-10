@@ -107,10 +107,11 @@ public class ResumeAnalysisController {
                     sort = "createdAt",
                     direction = Sort.Direction.DESC
             )
-            Pageable pageable
+            Pageable pageable,
+            @AuthenticationPrincipal CurrentUserPrincipal principal
     ) {
         Page<AnalysisSummaryResponse> page =
-                analysisQueryService.getAll(pageable);
+                analysisQueryService.getAll(principal.getUserId(), pageable);
 
         Pagination pagination = new Pagination(
                 page.getNumber(),
@@ -134,10 +135,14 @@ public class ResumeAnalysisController {
 
     @GetMapping("/summary")
     public ResponseEntity<ApiResponse<AnalysisDashboardSummaryResponse>>
-    getDashboardSummary() {
+    getDashboardSummary(
+            @AuthenticationPrincipal CurrentUserPrincipal principal
+    ) {
 
         AnalysisDashboardSummaryResponse result =
-                analysisQueryService.getDashboardSummary();
+                analysisQueryService.getDashboardSummary(
+                        principal.getUserId()
+                );
 
         return ResponseEntity.ok(
                 ApiResponse.success(
