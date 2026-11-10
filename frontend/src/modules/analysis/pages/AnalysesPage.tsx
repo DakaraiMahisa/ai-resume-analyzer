@@ -8,6 +8,7 @@ import {
   useRetryAnalysis,
   useRecentAnalyses,
 } from "@/modules/analysis";
+import type { AnalysisStatus } from "@/modules/analysis/types/analysis.types";
 
 function formatScore(score: number) {
   return `${Math.round(score * 100)}%`;
@@ -55,6 +56,7 @@ function getStatusLabel(status: "RUNNING" | "COMPLETED" | "FAILED") {
 
 export function AnalysesPage() {
   const [page, setPage] = useState(0);
+  const [status, setStatus] = useState<AnalysisStatus | "ALL">("ALL");
   const navigate = useNavigate();
   const retryMutation = useRetryAnalysis();
   const deleteMutation = useDeleteAnalysis();
@@ -64,7 +66,7 @@ export function AnalysesPage() {
     isLoading: isAnalysesLoading,
     isError: isAnalysesError,
     refetch: refetchAnalyses,
-  } = useRecentAnalyses(page, 5);
+  } = useRecentAnalyses(page, 5, status === "ALL" ? undefined : status);
 
   const {
     data: summary,
@@ -175,6 +177,38 @@ export function AnalysesPage() {
           </Link>
         </div>
 
+        {/* Status filters */}
+        <div
+          className="mb-4 flex flex-wrap gap-2"
+          aria-label="Filter analyses by status"
+        >
+          {(
+            [
+              { label: "All", value: "ALL" },
+              { label: "Running", value: "RUNNING" },
+              { label: "Completed", value: "COMPLETED" },
+              { label: "Failed", value: "FAILED" },
+            ] as const
+          ).map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              aria-pressed={status === filter.value}
+              onClick={() => {
+                setStatus(filter.value);
+                setPage(0);
+              }}
+              className={[
+                "rounded-md border px-3 py-2 text-sm font-medium transition-colors",
+                status === filter.value
+                  ? "border-brand bg-brand text-text-inverse"
+                  : "border-border text-text-secondary hover:bg-surface-muted",
+              ].join(" ")}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
         {!hasAnalyses ? (
           <Card className="p-8 text-center">
             <p className="text-sm font-medium text-text-primary">
@@ -202,50 +236,50 @@ export function AnalysesPage() {
                     className="block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                   >
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="truncate text-sm font-semibold text-text-primary">
-                          {analysis.resumeDisplayName}
-                        </h3>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="truncate text-sm font-semibold text-text-primary">
+                            {analysis.resumeDisplayName}
+                          </h3>
 
-                        <Badge variant={getStatusVariant(analysis.status)}>
-                          {getStatusLabel(analysis.status)}
-                        </Badge>
-                      </div>
+                          <Badge variant={getStatusVariant(analysis.status)}>
+                            {getStatusLabel(analysis.status)}
+                          </Badge>
+                        </div>
 
-                      <div className="mt-2 flex min-w-0 items-center gap-2 text-sm">
-                        <span className="shrink-0 text-text-tertiary">
-                          Target job
-                        </span>
+                        <div className="mt-2 flex min-w-0 items-center gap-2 text-sm">
+                          <span className="shrink-0 text-text-tertiary">
+                            Target job
+                          </span>
 
-                        <span className="truncate font-medium text-text-secondary">
-                          {analysis.jobDescriptionDisplayName}
-                        </span>
-                      </div>
+                          <span className="truncate font-medium text-text-secondary">
+                            {analysis.jobDescriptionDisplayName}
+                          </span>
+                        </div>
 
-                      <p className="mt-2 text-xs text-text-tertiary">
-                        Analyzed {formatDate(analysis.createdAt)}
-                      </p>
-                    </div>
-
-                    <div className="flex shrink-0 items-center justify-between gap-6 lg:justify-end">
-                      <div className="text-left lg:text-right">
-                        <p className="text-xs font-medium uppercase tracking-wide text-text-tertiary">
-                          Match
-                        </p>
-
-                        <p className="mt-1 text-2xl font-semibold tracking-tight text-text-primary">
-                          {formatScore(analysis.overallScore)}
+                        <p className="mt-2 text-xs text-text-tertiary">
+                          Analyzed {formatDate(analysis.createdAt)}
                         </p>
                       </div>
 
-                      <span
-                        aria-hidden="true"
-                        className="text-lg text-text-tertiary transition-transform group-hover:translate-x-0.5"
-                      >
-                        →
-                      </span>
-                    </div>
+                      <div className="flex shrink-0 items-center justify-between gap-6 lg:justify-end">
+                        <div className="text-left lg:text-right">
+                          <p className="text-xs font-medium uppercase tracking-wide text-text-tertiary">
+                            Match
+                          </p>
+
+                          <p className="mt-1 text-2xl font-semibold tracking-tight text-text-primary">
+                            {formatScore(analysis.overallScore)}
+                          </p>
+                        </div>
+
+                        <span
+                          aria-hidden="true"
+                          className="text-lg text-text-tertiary transition-transform group-hover:translate-x-0.5"
+                        >
+                          →
+                        </span>
+                      </div>
                     </div>
                   </Link>
                   <div className="mt-4 flex gap-2">

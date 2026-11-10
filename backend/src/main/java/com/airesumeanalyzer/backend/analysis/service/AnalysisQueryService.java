@@ -76,15 +76,29 @@ public class AnalysisQueryService {
     @Transactional(readOnly = true)
     public Page<AnalysisSummaryResponse> getAll(
             UUID ownerId,
+            AnalysisStatus status,
             Pageable pageable
     ) {
-        return analysisRepository
-                .findAllByResumeOwnerIdOrderByCreatedAtDesc(
-                        ownerId,
-                        pageable
-                )
-                .map(this::toSummaryResponse);
+        Page<Analysis> analyses;
+
+        if (status == null) {
+            analyses = analysisRepository
+                    .findAllByResumeOwnerIdOrderByCreatedAtDesc(
+                            ownerId,
+                            pageable
+                    );
+        } else {
+            analyses = analysisRepository
+                    .findAllByResumeOwnerIdAndStatusOrderByCreatedAtDesc(
+                            ownerId,
+                            status,
+                            pageable
+                    );
+        }
+
+        return analyses.map(this::toSummaryResponse);
     }
+
     @Transactional(readOnly = true)
     public AnalysisDashboardSummaryResponse getDashboardSummary(UUID ownerId) {
 

@@ -4,6 +4,7 @@ import {
   getAnalysisDashboardSummary,
 } from "@/modules/analysis/api/analysis.api";
 import { useCurrentUser } from "@/modules/user/hooks/use-current-user";
+import type { AnalysisStatus } from "@/modules/analysis/types/analysis.types";
 
 export const analysisDashboardQueryKeys = {
   all: ["analysis-dashboard"] as const,
@@ -14,8 +15,19 @@ export const analysisDashboardQueryKeys = {
   summary: (userId: string) =>
     [...analysisDashboardQueryKeys.user(userId), "summary"] as const,
 
-  recent: (userId: string, page: number, size: number) =>
-    [...analysisDashboardQueryKeys.user(userId), "recent", page, size] as const,
+  recent: (
+    userId: string,
+    page: number,
+    size: number,
+    status?: AnalysisStatus,
+  ) =>
+    [
+      ...analysisDashboardQueryKeys.user(userId),
+      "recent",
+      page,
+      size,
+      status ?? "ALL",
+    ] as const,
 };
 
 export const useAnalysisDashboardSummary = () => {
@@ -28,7 +40,11 @@ export const useAnalysisDashboardSummary = () => {
   });
 };
 
-export const useRecentAnalyses = (page = 0, size = 5) => {
+export const useRecentAnalyses = (
+  page = 0,
+  size = 5,
+  status?: AnalysisStatus,
+) => {
   const { data: user } = useCurrentUser();
 
   return useQuery({
@@ -36,8 +52,9 @@ export const useRecentAnalyses = (page = 0, size = 5) => {
       user?.id ?? "unauthenticated",
       page,
       size,
+      status,
     ),
-    queryFn: () => getAnalyses(page, size),
+    queryFn: () => getAnalyses(page, size, status),
     enabled: !!user?.id,
   });
 };

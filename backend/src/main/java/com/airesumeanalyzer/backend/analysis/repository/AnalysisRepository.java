@@ -42,4 +42,10 @@ public interface AnalysisRepository extends JpaRepository<Analysis, UUID> {
             @Param("ownerId") UUID ownerId,
             @Param("status") AnalysisStatus status
     );
+
+    Page<Analysis> findAllByResumeOwnerIdAndStatusOrderByCreatedAtDesc(
+            UUID ownerId,
+            AnalysisStatus status,
+            Pageable pageable
+    );
 }

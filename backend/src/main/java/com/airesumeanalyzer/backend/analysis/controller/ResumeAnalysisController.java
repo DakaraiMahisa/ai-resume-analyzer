@@ -3,6 +3,7 @@ package com.airesumeanalyzer.backend.analysis.controller;
 import com.airesumeanalyzer.backend.analysis.dto.AnalysisDashboardSummaryResponse;
 import com.airesumeanalyzer.backend.analysis.dto.AnalysisSummaryResponse;
 import com.airesumeanalyzer.backend.analysis.dto.AnalysisStatusResponse;
+import com.airesumeanalyzer.backend.analysis.enums.AnalysisStatus;
 import com.airesumeanalyzer.backend.auth.security.CurrentUserPrincipal;
 import com.airesumeanalyzer.backend.analysis.service.AnalysisQueryService;
 import com.airesumeanalyzer.backend.analysis.service.ResumeAnalysisService;
@@ -108,10 +109,15 @@ public class ResumeAnalysisController {
                     direction = Sort.Direction.DESC
             )
             Pageable pageable,
+            @RequestParam(required = false) AnalysisStatus status,
             @AuthenticationPrincipal CurrentUserPrincipal principal
     ) {
         Page<AnalysisSummaryResponse> page =
-                analysisQueryService.getAll(principal.getUserId(), pageable);
+                analysisQueryService.getAll(
+                        principal.getUserId(),
+                        status,
+                        pageable
+                );
 
         Pagination pagination = new Pagination(
                 page.getNumber(),
