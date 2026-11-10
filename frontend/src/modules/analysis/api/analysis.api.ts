@@ -1,6 +1,7 @@
 import type { ApiResponse, Pagination } from "@/core/api/api-response";
 import apiClient from "@/core/api/axios";
 import type {
+  AnalysisStatus,
   AnalysisStatusResponse,
   AnalysisSummaryResponse,
   AnalysisDashboardSummaryResponse,
@@ -29,7 +30,9 @@ export const getAnalysis = async (
   );
 
   if (!response.data.data) {
-    throw new Error(response.data.message ?? "Analysis status was not returned");
+    throw new Error(
+      response.data.message ?? "Analysis status was not returned",
+    );
   }
 
   return response.data.data;
@@ -54,6 +57,7 @@ export const deleteAnalysis = async (analysisId: string): Promise<void> => {
 export const getAnalyses = async (
   page = 0,
   size = 10,
+  status?: AnalysisStatus,
 ): Promise<{
   analyses: AnalysisSummaryResponse[];
   pagination: Pagination | null;
@@ -64,6 +68,7 @@ export const getAnalyses = async (
       params: {
         page,
         size,
+        ...(status && { status }),
       },
     },
   );
