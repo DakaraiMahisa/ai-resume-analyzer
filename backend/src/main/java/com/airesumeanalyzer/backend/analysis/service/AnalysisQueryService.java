@@ -75,26 +75,31 @@ public class AnalysisQueryService {
 
     @Transactional(readOnly = true)
     public Page<AnalysisSummaryResponse> getAll(
+            UUID ownerId,
             Pageable pageable
     ) {
         return analysisRepository
-                .findAllByOrderByCreatedAtDesc(pageable)
+                .findAllByResumeOwnerIdOrderByCreatedAtDesc(
+                        ownerId,
+                        pageable
+                )
                 .map(this::toSummaryResponse);
     }
-
     @Transactional(readOnly = true)
-    public AnalysisDashboardSummaryResponse getDashboardSummary() {
+    public AnalysisDashboardSummaryResponse getDashboardSummary(UUID ownerId) {
 
         long totalAnalyses =
-                analysisRepository.count();
+                analysisRepository.countByResumeOwnerId(ownerId);
 
         long completedAnalyses =
-                analysisRepository.countByStatus(
+                analysisRepository.countByResumeOwnerIdAndStatus(
+                        ownerId,
                         AnalysisStatus.COMPLETED
                 );
 
         Double average =
-                analysisRepository.findAverageOverallScoreByStatus(
+                analysisRepository.findAverageOverallScoreByOwnerIdAndStatus(
+                        ownerId,
                         AnalysisStatus.COMPLETED
                 );
 

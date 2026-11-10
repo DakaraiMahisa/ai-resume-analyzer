@@ -14,9 +14,16 @@ import java.util.Optional;
 
 public interface AnalysisRepository extends JpaRepository<Analysis, UUID> {
 
-    Page<Analysis> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    Page<Analysis> findAllByResumeOwnerIdOrderByCreatedAtDesc(
+            UUID ownerId,
+            Pageable pageable
+    );
+    long countByResumeOwnerId(UUID ownerId);
 
-    long countByStatus(AnalysisStatus status);
+    long countByResumeOwnerIdAndStatus(
+            UUID ownerId,
+            AnalysisStatus status
+    );
 
     Optional<Analysis> findByIdAndResumeOwnerId(UUID analysisId, UUID ownerId);
 
@@ -26,11 +33,13 @@ public interface AnalysisRepository extends JpaRepository<Analysis, UUID> {
     );
 
     @Query("""
-        select avg(a.overallScore)
-        from Analysis a
-        where a.status = :status
-    """)
-    Double findAverageOverallScoreByStatus(
+    select avg(a.overallScore)
+    from Analysis a
+    where a.resume.owner.id = :ownerId
+      and a.status = :status
+""")
+    Double findAverageOverallScoreByOwnerIdAndStatus(
+            @Param("ownerId") UUID ownerId,
             @Param("status") AnalysisStatus status
     );
 }
