@@ -5,7 +5,6 @@ import com.airesumeanalyzer.backend.ai.evidence.EvidenceLocator;
 import com.airesumeanalyzer.backend.ai.model.claims.Evidence;
 import com.airesumeanalyzer.backend.ai.model.claims.ProposedClaim;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -15,7 +14,6 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class EvidenceEnricherImpl implements EvidenceEnricher {
 
     private final EvidenceLocator evidenceLocator;
@@ -61,16 +59,6 @@ public class EvidenceEnricherImpl implements EvidenceEnricher {
                     List<Evidence> evidence =
                             new ArrayList<>(uniqueEvidence.values());
 
-                    log.debug(
-                            "Evidence enrichment completed. "
-                                    + "sourceDocumentId={}, claimType={}, "
-                                    + "value={}, searchTermCount={}, evidenceCount={}",
-                            claim.sourceDocumentId(),
-                            claim.claimType(),
-                            claim.extractedValue(),
-                            searchTerms.size(),
-                            evidence.size()
-                    );
 
                     return ProposedClaim.builder()
                             .claimType(claim.claimType())

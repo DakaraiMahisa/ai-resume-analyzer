@@ -11,13 +11,14 @@ import com.airesumeanalyzer.backend.ai.service.ResumeUnderstandingService;
 import com.airesumeanalyzer.backend.ai.validation.ValidationEngine;
 import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundException;
 import com.airesumeanalyzer.backend.common.storage.DocumentStorage;
+import com.airesumeanalyzer.backend.pii.CandidateNameResolver;
+import com.airesumeanalyzer.backend.pii.ResumePiiSanitizer;
 import com.airesumeanalyzer.backend.processing.enums.DocumentType;
 import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
 import com.airesumeanalyzer.backend.processing.extraction.TextExtractor;
 import com.airesumeanalyzer.backend.resume.entity.Resume;
 import com.airesumeanalyzer.backend.resume.repository.ResumeRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -29,7 +30,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class ResumeProcessingService {
 
     private final ResumeRepository resumeRepository;
@@ -37,6 +37,8 @@ public class ResumeProcessingService {
     private final TextExtractor textExtractor;
     private final ResumeUnderstandingService resumeUnderstandingService;
     private final ObjectMapper objectMapper;
+    private final CandidateNameResolver candidateNameResolver;
+    private final ResumePiiSanitizer resumePiiSanitizer;
 
     private final AiResponseParser aiResponseParser;
     private final EvidenceEnricher evidenceEnricher;
@@ -61,10 +63,25 @@ public class ResumeProcessingService {
             String extractedText =
                     textExtractor.extract(inputStream);
 
-            resume.setRawText(extractedText);
-            StructuredResume structuredResume =
-                    resumeUnderstandingService.understand(extractedText);
+            String candidateName =
+                    candidateNameResolver.resolveCandidateName(
+                            resume.getOriginalFilename(),
+                            extractedText
+                    );
 
+            ResumePiiSanitizer.SanitizedResumePayload sanitizedPayload =
+                    resumePiiSanitizer.sanitize(
+                            extractedText,
+                            candidateName
+                    );
+
+            resume.setRawText(extractedText);
+
+
+            StructuredResume structuredResume =
+                    resumeUnderstandingService.understand(
+                            sanitizedPayload.sanitizedText()
+                    );
             resume.setStructuredData(
                     objectMapper.writeValueAsString(structuredResume)
             );
