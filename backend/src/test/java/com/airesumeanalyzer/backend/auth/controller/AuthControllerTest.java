@@ -7,6 +7,7 @@ import com.airesumeanalyzer.backend.auth.dto.refresh.RefreshTokenRequest;
 import com.airesumeanalyzer.backend.auth.dto.refresh.RefreshTokenResponse;
 import com.airesumeanalyzer.backend.auth.dto.register.RegisterRequest;
 import com.airesumeanalyzer.backend.auth.dto.register.RegisterResponse;
+import com.airesumeanalyzer.backend.auth.security.exception.RestAuthenticationEntryPoint;
 import com.airesumeanalyzer.backend.auth.security.jwt.JwtService;
 import com.airesumeanalyzer.backend.auth.service.AuthService;
 import com.airesumeanalyzer.backend.user.repository.UserRepository;
@@ -40,6 +41,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private RestAuthenticationEntryPoint authenticationEntryPoint;
 
     @Test
     void shouldRegisterUserSuccessfully() throws Exception {

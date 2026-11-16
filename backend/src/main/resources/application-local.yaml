@@ -1,0 +1,26 @@
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+  opentelemetry:
+    resource-attributes:
+      service.name: rolenexa-backend
+      deployment.environment: local
+
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+logging:
+  structured:
+    format:
+      console: logstash

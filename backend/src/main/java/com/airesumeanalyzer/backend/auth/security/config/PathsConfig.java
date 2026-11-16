@@ -37,8 +37,18 @@ public class PathsConfig {
                 "/api/v1/job-descriptions/**",
                 "/api/v1/matching/**",
                 "/api/v1/analysis/**",
-                "/api/v1/users/**"
+                "/api/v1/users/**",
+                "/actuator/metrics",
+                "/actuator/metrics/**"
 
+        );
+    }
+
+    @Bean(name = "adminPaths")
+    public List<String> adminPaths() {
+        return List.of(
+                "/actuator/metrics",
+                "/actuator/metrics/**"
         );
     }
 
