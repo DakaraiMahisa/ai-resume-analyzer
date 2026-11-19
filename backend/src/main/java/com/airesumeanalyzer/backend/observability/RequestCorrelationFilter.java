@@ -16,6 +16,7 @@ import java.util.UUID;
 public class RequestCorrelationFilter extends OncePerRequestFilter {
 
     private static final String REQUEST_ID = "requestId";
+    private static final String TRACE_ID = "traceId";
     private static final String RESPONSE_HEADER = "X-Request-ID";
 
     @Override
@@ -26,16 +27,19 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String requestId = UUID.randomUUID().toString();
+        String traceId = UUID.randomUUID().toString();
 
         try {
             MDC.put(REQUEST_ID, requestId);
+            MDC.put(TRACE_ID, traceId);
+
             response.setHeader(RESPONSE_HEADER, requestId);
 
             filterChain.doFilter(request, response);
 
         } finally {
             MDC.remove(REQUEST_ID);
+            MDC.remove(TRACE_ID);
         }
     }
 }
-
