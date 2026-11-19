@@ -1,8 +1,13 @@
 package com.airesumeanalyzer.backend.auth.security.config;
 
+import com.airesumeanalyzer.backend.auth.security.exception.RestAccessDeniedHandler;
+import com.airesumeanalyzer.backend.auth.security.exception.RestAuthenticationEntryPoint;
 import com.airesumeanalyzer.backend.auth.security.jwt.JwtAuthenticationFilter;
+import com.airesumeanalyzer.backend.observability.RequestCorrelationFilter;
+import com.airesumeanalyzer.backend.observability.RequestLoggingFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -36,7 +41,14 @@ public class SecurityConfig {
 
     @Qualifier("securedPaths")
     private final List<String> securedPaths;
+
+    @Qualifier("adminPaths")
+    private final List<String> adminPaths;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RequestCorrelationFilter requestCorrelationFilter;
+    private final RequestLoggingFilter requestLoggingFilter;
+    private final RestAuthenticationEntryPoint authenticationEntryPoint;
+    private final RestAccessDeniedHandler accessDeniedHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -48,11 +60,14 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(
-                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
-                        )
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                 )
                 .authorizeHttpRequests(requests -> {
+
+                    adminPaths.forEach(path ->
+                            requests.requestMatchers(path).hasRole("ADMIN")
+                    );
                     publicPaths.forEach(path ->
                             requests.requestMatchers(path).permitAll()
                     );
@@ -60,12 +75,19 @@ public class SecurityConfig {
                     securedPaths.forEach(path ->
                             requests.requestMatchers(path).authenticated()
                     );
-
                     requests.anyRequest().denyAll();
                 })
                 .addFilterBefore(
+                        requestLoggingFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
+                .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
+                )
+                .addFilterBefore(
+                        requestCorrelationFilter,
+                        JwtAuthenticationFilter.class
                 );
 
         return http.build();
@@ -97,5 +119,31 @@ public class SecurityConfig {
     @Bean
     public CompromisedPasswordChecker compromisedPasswordChecker() {
         return new HaveIBeenPwnedRestApiPasswordChecker();
+    }
+
+    @Bean
+    public FilterRegistrationBean<RequestCorrelationFilter>
+    requestCorrelationFilterRegistration(
+            RequestCorrelationFilter filter
+    ) {
+        FilterRegistrationBean<RequestCorrelationFilter> registration =
+                new FilterRegistrationBean<>(filter);
+
+        registration.setEnabled(false);
+
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<RequestLoggingFilter>
+    requestLoggingFilterRegistration(
+            RequestLoggingFilter filter
+    ) {
+        FilterRegistrationBean<RequestLoggingFilter> registration =
+                new FilterRegistrationBean<>(filter);
+
+        registration.setEnabled(false);
+
+        return registration;
     }
 }

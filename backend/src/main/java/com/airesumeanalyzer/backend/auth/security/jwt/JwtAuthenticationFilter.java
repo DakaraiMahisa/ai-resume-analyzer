@@ -1,6 +1,7 @@
 package com.airesumeanalyzer.backend.auth.security.jwt;
 
 
+import com.airesumeanalyzer.backend.auth.security.exception.RestAuthenticationEntryPoint;
 import com.airesumeanalyzer.backend.user.entity.User;
 import com.airesumeanalyzer.backend.user.repository.UserRepository;
 import com.airesumeanalyzer.backend.auth.security.CurrentUserPrincipal;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -30,6 +32,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final RestAuthenticationEntryPoint authenticationEntryPoint;
+
 
     @Override
     protected void doFilterInternal(
@@ -38,25 +42,52 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        String token = extractTokenFromRequest(request);
+
+        if (token == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
-            String token = extractTokenFromRequest(request);
-
-            if (token != null && jwtService.validateToken(token)) {
-
-                String email = jwtService.extractEmail(token);
-
-                if (email != null) {
-                    setSecurityContext(email, request);
-                }
+            if (!jwtService.validateToken(token)) {
+                SecurityContextHolder.clearContext();
+                authenticationEntryPoint.commence(
+                        request,
+                        response,
+                        new BadCredentialsException("Invalid or expired token.")
+                );
+                return;
             }
 
-        } catch (Exception e) {
-            log.error("Could not set user authentication in security context", e);
+            String email = jwtService.extractEmail(token);
+
+            if (email == null) {
+                SecurityContextHolder.clearContext();
+                authenticationEntryPoint.commence(
+                        request,
+                        response,
+                        new BadCredentialsException("Invalid authentication token.")
+                );
+                return;
+            }
+
+            setSecurityContext(email, request);
+
+        } catch (ResourceNotFoundException exception) {
             SecurityContextHolder.clearContext();
+
+            authenticationEntryPoint.commence(
+                    request,
+                    response,
+                    new BadCredentialsException("Invalid authentication token.")
+            );
+            return;
         }
 
         filterChain.doFilter(request, response);
     }
+
 
     private String extractTokenFromRequest(HttpServletRequest request) {
 
@@ -101,9 +132,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .getContext()
                 .setAuthentication(authentication);
 
-        log.debug(
-                "Authenticated user: {}",
-                email
-        );
+        log.debug("JWT authentication established");
     }
 }

@@ -145,14 +145,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(
             Exception ex) {
+
         String traceId = MDC.get("traceId");
-        if (traceId == null) {
-            traceId = UUID.randomUUID().toString();
-            MDC.put("traceId", traceId);
-        }
 
         log.error("Unhandled exception with traceId: {}", traceId, ex);
-        String errorMessage = "An unexpected error occurred. Trace ID: " + traceId;
+
+        String errorMessage = "An unexpected error occurred."
+                + (traceId != null ? " Trace ID: " + traceId : "");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(errorMessage));

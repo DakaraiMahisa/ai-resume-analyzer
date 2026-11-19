@@ -11,6 +11,7 @@ import com.airesumeanalyzer.backend.ai.service.ResumeUnderstandingService;
 import com.airesumeanalyzer.backend.ai.validation.ValidationEngine;
 import com.airesumeanalyzer.backend.common.exception.base.ResourceNotFoundException;
 import com.airesumeanalyzer.backend.common.storage.DocumentStorage;
+import com.airesumeanalyzer.backend.observability.metrics.TrackExecutionTime;
 import com.airesumeanalyzer.backend.pii.CandidateNameResolver;
 import com.airesumeanalyzer.backend.pii.ResumePiiSanitizer;
 import com.airesumeanalyzer.backend.processing.enums.DocumentType;
@@ -18,6 +19,7 @@ import com.airesumeanalyzer.backend.processing.exception.ProcessingException;
 import com.airesumeanalyzer.backend.processing.extraction.TextExtractor;
 import com.airesumeanalyzer.backend.resume.entity.Resume;
 import com.airesumeanalyzer.backend.resume.repository.ResumeRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +48,10 @@ public class ResumeProcessingService {
     private final ClaimResolutionEngine claimResolutionEngine;
     private final ClaimPersistenceService claimPersistenceService;
 
-
+    @TrackExecutionTime(
+            value = "rolenexa.resume.processing.duration",
+            description = "Time taken to process a resume"
+    )
     @Transactional
     public void processResume(UUID resumeId) {
 
@@ -99,15 +104,12 @@ public class ResumeProcessingService {
                     );
 
             List<ProposedClaim> validClaims = new java.util.ArrayList<>();
-            int rejectedClaimCount = 0;
+
             for (ProposedClaim claim : enrichedClaims) {
                 var validation = validationEngine.validate(claim);
+
                 if (validation.valid()) {
                     validClaims.add(claim);
-
-                } else {
-                    rejectedClaimCount++;
-
                 }
             }
 
@@ -119,10 +121,7 @@ public class ResumeProcessingService {
                             DocumentType.RESUME
                     );
 
-
-            List<Claim> persistedClaims =
-                    claimPersistenceService.saveAll(resolvedClaims);
-
+            claimPersistenceService.saveAll(resolvedClaims);
 
         } catch (IOException exception) {
 
@@ -133,7 +132,5 @@ public class ResumeProcessingService {
         }
     }
 
-    private int sizeOf(List<?> values) {
-        return values == null ? 0 : values.size();
-    }
+
 }
