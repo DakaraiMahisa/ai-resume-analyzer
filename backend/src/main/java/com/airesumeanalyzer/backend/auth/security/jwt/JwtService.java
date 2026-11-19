@@ -2,6 +2,7 @@ package com.airesumeanalyzer.backend.auth.security.jwt;
 
 import com.airesumeanalyzer.backend.auth.security.CurrentUserPrincipal;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -80,7 +81,7 @@ public class JwtService {
             getClaims(token);
             return true;
 
-        } catch (Exception e) {
+        } catch (JwtException | IllegalArgumentException exception) {
             return false;
         }
     }

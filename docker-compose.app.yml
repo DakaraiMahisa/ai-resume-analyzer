@@ -17,6 +17,8 @@ services:
     environment:
       DB_URL: jdbc:mysql://mysql:3306/${DB_NAME}
       SPRING_PROFILES_ACTIVE: local
+      APPLICATIONINSIGHTS_CONNECTION_STRING: ${APPLICATIONINSIGHTS_CONNECTION_STRING:-}
+      OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_MDC_ATTRIBUTES_INCLUDED: traceId,requestId
 
     networks:
       - ai-resume-network
