@@ -17,6 +17,8 @@ import {
   AnalysisResultPage,
   AnalysesPage,
 } from "@/modules/analysis";
+import { CareerProfilePage } from "@/modules/career/pages/CareerProfilePage";
+
 export const router = createBrowserRouter([
   {
     errorElement: (
@@ -83,6 +85,10 @@ export const router = createBrowserRouter([
               {
                 path: "settings",
                 element: <div>Settings</div>,
+              },
+              {
+                path: "career",
+                element: <CareerProfilePage />,
               },
             ],
           },
