@@ -13,3 +13,4 @@ export type { SeparatorProps } from "./Separator";
 export { Spinner } from "./Spinner";
 export type { SpinnerProps } from "./Spinner";
 export { ThemeToggle } from "./ThemeToggle";
+export { Textarea } from "./Textarea";

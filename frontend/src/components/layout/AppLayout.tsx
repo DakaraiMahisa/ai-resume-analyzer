@@ -8,6 +8,10 @@ const primaryNavigation = [
     to: "/app/dashboard",
   },
   {
+    label: "Career Profile",
+    to: "/app/career",
+  },
+  {
     label: "Resumes",
     to: "/app/resumes",
   },
