@@ -38,6 +38,7 @@ public class PathsConfig {
                 "/api/v1/matching/**",
                 "/api/v1/analysis/**",
                 "/api/v1/users/**",
+                "/api/v1/career/profile/**",
                 "/actuator/metrics",
                 "/actuator/metrics/**"
 
